@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Mukwatela | Entrar</title>
+    <link rel="icon" href="./public/favicon.svg" type="image/svg+xml" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="./css/styles.css" />
+  </head>
+  <body data-page="auth">
+    <header class="site-header" id="top">
+      <div class="container nav-wrap">
+        <a href="index.html" class="brand" aria-label="Voltar ao início">
+          <img class="brand-logo" src="assets/logotipo%20.png" alt="Mukwatela logo" />
+        </a>
+        <nav class="main-nav" aria-label="Navegação principal">
+          <ul>
+            <li><a href="index.html">Início</a></li>
+            <li><a href="services.html">Serviços</a></li>
+            <li><a href="portfolio.html">Portfólio</a></li>
+            <li><a href="contactos.html">Contactos</a></li>
+          </ul>
+        </nav>
+        <div class="header-actions">
+          <a class="btn btn-whatsapp" href="https://wa.me/975397984?text=Olá%2C%20gostaria%20de%20solicitar%20um%20orçamento." target="_blank" rel="noreferrer">Falar no WhatsApp</a>
+        </div>
+        <button class="nav-toggle" type="button" aria-label="Abrir menu" aria-expanded="false">
+          <span></span><span></span><span></span>
+        </button>
+      </div>
+      <div class="mobile-menu" aria-label="Menu mobile">
+        <div class="mobile-menu-inner">
+          <a href="index.html">Início</a>
+          <a href="services.html">Serviços</a>
+          <a href="portfolio.html">Portfólio</a>
+          <a href="contactos.html">Contactos</a>
+          <a class="btn btn-whatsapp mobile-cta" href="https://wa.me/975397984?text=Olá%2C%20gostaria%20de%20solicitar%20um%20orçamento." target="_blank" rel="noreferrer"><span class="whatsapp-icon" aria-hidden="true">◔</span> Solicitar orçamento</a>
+        </div>
+      </div>
+    </header>
+
+    <main class="auth-page-shell">
+      <section class="auth-layout container">
+        <div class="auth-panel auth-visual">
+          <span class="eyebrow">Acesso ao cliente</span>
+          <h1>Área privada da Mukwatela.</h1>
+          <p>Veja os seus serviços, acompanhe pedidos e aproveite a gestão do cliente em uma experiência profissional.</p>
+          <ul class="auth-feature-list">
+            <li>Pedidos e compras</li>
+            <li>Orçamentos e pagamentos</li>
+            <li>Perfil e notificações</li>
+          </ul>
+        </div>
+
+        <div class="auth-panel auth-card">
+          <div class="auth-tabs">
+            <button class="auth-tab is-active" type="button" data-auth-mode="login">Login</button>
+            <a class="auth-tab" href="register.html">Criar conta</a>
+          </div>
+
+          <form id="login-form" class="auth-form">
+            <div class="field-row">
+              <label for="login-email">Email</label>
+              <input id="login-email" name="email" type="email" placeholder="cliente@demo.com" required />
+            </div>
+            <div class="field-row">
+              <label for="login-password">Palavra-passe</label>
+              <input id="login-password" name="password" type="password" placeholder="••••••" required />
+            </div>
+            <button type="submit" class="btn btn-primary btn-block">Entrar</button>
+            <div class="auth-actions-inline">
+              <a href="register.html" class="link-button">Criar conta</a>
+              <button type="button" class="link-button" id="forgot-password-btn">Esqueci-me da palavra-passe</button>
+            </div>
+            <button type="button" class="btn btn-secondary btn-block" id="demo-login-btn">Continuar como demonstração</button>
+          </form>
+
+          <div class="auth-demo-box">
+            <h3>Credenciais de demonstração</h3>
+            <p>Cliente: cliente@demo.com / 123456</p>
+            <p>Admin: admin@mukwatela.demo / admin123</p>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <script src="./js/company.js"></script>
+    <script src="./js/main.js"></script>
+    <script src="./js/mukwatela-demo.js"></script>
+  </body>
+</html>

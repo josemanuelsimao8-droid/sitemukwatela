@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Mukwatela | Criar conta</title>
+    <link rel="icon" href="./public/favicon.svg" type="image/svg+xml" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="./css/styles.css" />
+  </head>
+  <body data-page="register">
+    <header class="site-header" id="top">
+      <div class="container nav-wrap">
+        <a href="index.html" class="brand" aria-label="Voltar ao início">
+          <img class="brand-logo" src="assets/logotipo%20.png" alt="Mukwatela logo" />
+        </a>
+        <nav class="main-nav" aria-label="Navegação principal">
+          <ul>
+            <li><a href="index.html">Início</a></li>
+            <li><a href="services.html">Serviços</a></li>
+            <li><a href="portfolio.html">Portfólio</a></li>
+            <li><a href="contactos.html">Contactos</a></li>
+          </ul>
+        </nav>
+        <div class="header-actions">
+          <a class="btn btn-whatsapp" href="https://wa.me/975397984?text=Olá%2C%20gostaria%20de%20solicitar%20um%20orçamento." target="_blank" rel="noreferrer">Falar no WhatsApp</a>
+        </div>
+        <button class="nav-toggle" type="button" aria-label="Abrir menu" aria-expanded="false">
+          <span></span><span></span><span></span>
+        </button>
+      </div>
+      <div class="mobile-menu" aria-label="Menu mobile">
+        <div class="mobile-menu-inner">
+          <a href="index.html">Início</a>
+          <a href="services.html">Serviços</a>
+          <a href="portfolio.html">Portfólio</a>
+          <a href="contactos.html">Contactos</a>
+          <a class="btn btn-whatsapp mobile-cta" href="https://wa.me/975397984?text=Olá%2C%20gostaria%20de%20solicitar%20um%20orçamento." target="_blank" rel="noreferrer"><span class="whatsapp-icon" aria-hidden="true">◔</span> Solicitar orçamento</a>
+        </div>
+      </div>
+    </header>
+
+    <main class="auth-page-shell">
+      <section class="auth-layout container compact-auth">
+        <div class="auth-panel auth-card register-card">
+          <div class="auth-tabs">
+            <a class="auth-tab" href="auth.html">Login</a>
+            <button class="auth-tab is-active" type="button">Criar conta</button>
+          </div>
+          <form id="register-form" class="auth-form">
+            <div class="field-row field-two">
+              <div>
+                <label for="register-name">Nome completo</label>
+                <input id="register-name" name="name" type="text" required />
+              </div>
+              <div>
+                <label for="register-company">Nome da empresa (opcional)</label>
+                <input id="register-company" name="company" type="text" />
+              </div>
+            </div>
+            <div class="field-row field-two">
+              <div>
+                <label for="register-email">Email</label>
+                <input id="register-email" name="email" type="email" required />
+              </div>
+              <div>
+                <label for="register-phone">Telefone</label>
+                <input id="register-phone" name="phone" type="tel" required />
+              </div>
+            </div>
+            <div class="field-row field-two">
+              <div>
+                <label for="register-password">Palavra-passe</label>
+                <input id="register-password" name="password" type="password" required />
+              </div>
+              <div>
+                <label for="register-confirm-password">Confirmar palavra-passe</label>
+                <input id="register-confirm-password" name="confirmPassword" type="password" required />
+              </div>
+            </div>
+            <label class="checkbox-row" for="accept-terms">
+              <input id="accept-terms" name="terms" type="checkbox" required />
+              <span>Li e aceito os termos e condições.</span>
+            </label>
+            <button type="submit" class="btn btn-primary btn-block">Criar conta</button>
+          </form>
+        </div>
+      </section>
+    </main>
+
+    <script src="./js/company.js"></script>
+    <script src="./js/main.js"></script>
+    <script src="./js/mukwatela-demo.js"></script>
+  </body>
+</html>

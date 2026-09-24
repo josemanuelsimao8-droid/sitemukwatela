@@ -125,6 +125,7 @@ function initHeroCarousel() {
 }
 
 function initAnimations() {
+  document.body.classList.add('js-ready');
   const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const elements = document.querySelectorAll('[data-animate]');
 
@@ -149,6 +150,9 @@ function initAnimations() {
   }, { threshold: 0.18 });
 
   elements.forEach((element) => observer.observe(element));
+  window.setTimeout(() => {
+    elements.forEach((element) => element.classList.add('is-visible'));
+  }, 1600);
 }
 
 function initPortfolio() {

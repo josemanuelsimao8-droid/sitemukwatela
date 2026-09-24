@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Mukwatela | Dashboard</title>
+    <link rel="icon" href="./public/favicon.svg" type="image/svg+xml" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="./css/styles.css" />
+  </head>
+  <body data-page="dashboard">
+    <div class="app-shell">
+      <aside class="app-sidebar">
+        <div class="sidebar-brand">
+          <a href="index.html" class="brand" aria-label="Voltar ao início">
+            <img class="brand-logo" src="assets/logotipo%20.png" alt="Mukwatela logo" />
+          </a>
+        </div>
+        <nav class="sidebar-nav" aria-label="Navegação do cliente">
+          <a class="nav-link is-active" href="dashboard.html">Visão geral</a>
+          <a class="nav-link" href="services.html">Serviços</a>
+          <a class="nav-link" href="compras.html">Minhas compras</a>
+          <a class="nav-link" href="checkout.html">Checkout</a>
+          <a class="nav-link" href="cartoes.html">Cartões</a>
+          <a class="nav-link" href="notificacoes.html">Notificações</a>
+          <a class="nav-link" href="perfil.html">Perfil</a>
+          <button class="nav-link nav-logout" type="button" data-logout> Sair </button>
+        </nav>
+      </aside>
+
+      <main class="app-main">
+        <header class="dashboard-topbar">
+          <div>
+            <p class="topbar-label">Área do cliente</p>
+            <h1>Dashboard</h1>
+          </div>
+          <div class="topbar-user">
+            <a class="icon-button" href="notificacoes.html" aria-label="Notificações">
+              🔔 <span id="notifications-count" class="count-badge">0</span>
+            </a>
+            <div class="avatar-box" id="user-avatar">C</div>
+            <div>
+              <strong id="user-name">Cliente</strong>
+            </div>
+          </div>
+        </header>
+
+        <section class="dashboard-section active">
+          <div class="summary-grid">
+            <article class="summary-card">
+              <span>Serviços adquiridos</span>
+              <strong id="sum-services">0</strong>
+            </article>
+            <article class="summary-card">
+              <span>Pedidos em andamento</span>
+              <strong id="sum-orders">0</strong>
+            </article>
+            <article class="summary-card">
+              <span>Pagamentos realizados</span>
+              <strong id="sum-payments">0</strong>
+            </article>
+            <article class="summary-card">
+              <span>Orçamentos</span>
+              <strong id="sum-budgets">0</strong>
+            </article>
+          </div>
+
+          <div class="dashboard-grid">
+            <section class="panel-card">
+              <h2>Atividade recente</h2>
+              <ul id="recent-activity" class="activity-list"></ul>
+            </section>
+            <section class="panel-card">
+              <h2>Notificações</h2>
+              <ul id="dashboard-notifications" class="notification-list compact"></ul>
+            </section>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <script src="./js/company.js"></script>
+    <script src="./js/main.js"></script>
+    <script src="./js/mukwatela-demo.js"></script>
+  </body>
+</html>

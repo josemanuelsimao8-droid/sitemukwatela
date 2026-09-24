@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Mukwatela | Cartões</title>
+    <link rel="icon" href="./public/favicon.svg" type="image/svg+xml" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="./css/styles.css" />
+  </head>
+  <body data-page="cartoes">
+    <div class="app-shell">
+      <aside class="app-sidebar">
+        <div class="sidebar-brand">
+          <a href="index.html" class="brand" aria-label="Voltar ao início">
+            <img class="brand-logo" src="assets/logotipo%20.png" alt="Mukwatela logo" />
+          </a>
+        </div>
+        <nav class="sidebar-nav" aria-label="Navegação do cliente">
+          <a class="nav-link" href="dashboard.html">Visão geral</a>
+          <a class="nav-link" href="services.html">Serviços</a>
+          <a class="nav-link" href="compras.html">Minhas compras</a>
+          <a class="nav-link is-active" href="cartoes.html">Cartões</a>
+          <a class="nav-link" href="notificacoes.html">Notificações</a>
+          <a class="nav-link" href="perfil.html">Perfil</a>
+          <button class="nav-link nav-logout" type="button" data-logout> Sair </button>
+        </nav>
+      </aside>
+
+      <main class="app-main">
+        <header class="dashboard-topbar">
+          <div>
+            <p class="topbar-label">Área do cliente</p>
+            <h1>Cartões</h1>
+          </div>
+          <button class="btn btn-primary" type="button" id="add-card-btn">+ Adicionar cartão</button>
+        </header>
+
+        <section class="panel-card dashboard-full-width">
+          <div id="saved-cards-list" class="cards-list"></div>
+        </section>
+      </main>
+    </div>
+
+    <div class="modal-backdrop" id="card-modal" aria-hidden="true">
+      <section class="card-modal" role="dialog" aria-modal="true" aria-labelledby="card-modal-title">
+        <div class="modal-header">
+          <div>
+            <span class="eyebrow">Pagamento seguro</span>
+            <h2 id="card-modal-title">Adicionar cartão</h2>
+          </div>
+          <button class="modal-close" type="button" id="card-modal-close" aria-label="Fechar">×</button>
+        </div>
+        <div class="modal-copy">
+          <form id="add-card-form" class="auth-form">
+            <div class="field-row">
+              <label for="new-card-name">Nome no cartão</label>
+              <input id="new-card-name" name="name" type="text" placeholder="NOME COMPLETO" required />
+            </div>
+            <div class="field-row">
+              <label for="new-card-number">Número do cartão</label>
+              <input id="new-card-number" name="number" type="text" inputmode="numeric" maxlength="19" placeholder="1234 5678 9012 3456" required />
+            </div>
+            <div class="field-row field-two">
+              <div>
+                <label for="new-card-expiry">Validade</label>
+                <input id="new-card-expiry" name="expiry" type="text" placeholder="MM/AA" required />
+              </div>
+              <div>
+                <label for="new-card-cvv">CVV</label>
+                <input id="new-card-cvv" name="cvv" type="password" inputmode="numeric" maxlength="4" placeholder="***" required />
+              </div>
+            </div>
+            <label class="checkbox-row" for="new-card-primary">
+              <input id="new-card-primary" name="primary" type="checkbox" />
+              <span>Definir como cartão principal</span>
+            </label>
+            <button class="btn btn-primary btn-block" type="submit">Guardar cartão</button>
+          </form>
+        </div>
+      </section>
+    </div>
+
+    <script src="./js/company.js"></script>
+    <script src="./js/main.js"></script>
+    <script src="./js/mukwatela-demo.js"></script>
+  </body>
+</html>

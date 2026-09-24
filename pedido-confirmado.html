@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Mukwatela | Compra confirmada</title>
+    <link rel="icon" href="./public/favicon.svg" type="image/svg+xml" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="./css/styles.css" />
+  </head>
+  <body data-page="confirmation">
+    <header class="site-header" id="top">
+      <div class="container nav-wrap">
+        <a href="index.html" class="brand" aria-label="Voltar ao início">
+          <img class="brand-logo" src="assets/logotipo%20.png" alt="Mukwatela logo" />
+        </a>
+        <div class="header-actions">
+          <a class="btn btn-secondary" href="dashboard.html">Dashboard</a>
+        </div>
+      </div>
+    </header>
+
+    <main class="section confirmation-page">
+      <div class="container">
+        <div class="panel-card confirmation-card">
+          <div class="success-icon">✓</div>
+          <span class="eyebrow">Compra realizada com sucesso</span>
+          <h1>Obrigado pela sua compra.</h1>
+          <div class="success-summary" id="success-summary"></div>
+          <div class="confirmation-actions">
+            <a class="btn btn-primary" href="compras.html">Ver pedido</a>
+            <a class="btn btn-secondary" href="dashboard.html">Voltar ao Dashboard</a>
+            <a class="btn btn-whatsapp" href="services.html">Continuar a comprar</a>
+          </div>
+          <p class="success-note">Confirmação enviada para o seu email. Notificação WhatsApp preparada.</p>
+        </div>
+      </div>
+    </main>
+
+    <script src="./js/company.js"></script>
+    <script src="./js/main.js"></script>
+    <script src="./js/mukwatela-demo.js"></script>
+  </body>
+</html>
