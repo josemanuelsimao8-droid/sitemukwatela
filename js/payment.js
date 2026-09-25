@@ -109,10 +109,10 @@
       return;
     }
 
-    if (!paymentMethod || paymentMethod.code !== 'transferencia') {
+    if (!paymentMethod) {
       const box = document.createElement('div');
       box.className = 'payment-unavailable-card';
-      box.innerHTML = '<span class="eyebrow">Pagamento</span><h3>Transferência bancária</h3><p>Nesta fase, a Mukwatela aceita pagamentos apenas por transferência bancária.</p><a class="btn btn-secondary" href="compras.html">Voltar aos pedidos</a>';
+      box.innerHTML = '<span class="eyebrow">Pagamento</span><h3>Método indisponível</h3><p>O método de pagamento deste pedido já não está disponível. Contacte a Mukwatela para obter orientação.</p><a class="btn btn-secondary" href="contactos.html">Contactar a Mukwatela</a>';
       root.appendChild(box);
       return;
     }
@@ -127,7 +127,7 @@
     eyebrow.className = 'eyebrow';
     eyebrow.textContent = 'Método selecionado';
     const h2 = document.createElement('h2');
-    h2.textContent = 'Transferência bancária';
+    h2.textContent = paymentMethod.name || 'Pagamento';
     heading.append(eyebrow, h2);
 
     const amount = document.createElement('strong');
@@ -169,7 +169,7 @@
     form.className = 'payment-proof-form';
 
     const refLabel = document.createElement('label');
-    refLabel.textContent = 'Referência da transferência';
+    refLabel.textContent = 'Referência do pagamento';
     const ref = document.createElement('input');
     ref.id = 'bank-reference';
     ref.type = 'text';
@@ -178,7 +178,7 @@
     refLabel.appendChild(ref);
 
     const fileLabel = document.createElement('label');
-    fileLabel.textContent = 'Comprovativo (PDF, JPG ou PNG)';
+    fileLabel.textContent = 'Comprovativo do pagamento (PDF, JPG ou PNG)';
     const file = document.createElement('input');
     file.id = 'bank-proof';
     file.type = 'file';
@@ -238,7 +238,7 @@
       return;
     }
 
-    const result = await client().rpc('submit_bank_payment_proof', {
+    const result = await client().rpc('submit_payment_proof', {
       p_payment_id: payment.id,
       p_proof_path: path,
       p_reference: refInput.value.trim() || null,
@@ -348,14 +348,6 @@
 
       renderSummary();
       setStatus(order.payment_status === 'confirmed' ? 'paid' : 'pending');
-
-      if (order.payment_method !== 'transferencia') {
-        const root = document.getElementById('payment-method-panel');
-        if (root) {
-          root.innerHTML = '<div class="payment-unavailable-card"><span class="eyebrow">Pagamento</span><h3>Método não disponível</h3><p>Nesta fase, a Mukwatela aceita pagamentos apenas por transferência bancária.</p><a class="btn btn-secondary" href="compras.html">Voltar aos pedidos</a></div>';
-        }
-        return;
-      }
 
       if (order.total !== null && Number(order.total) > 0) {
         payment = await loadPayment();
