@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mukwatela | Orçamentos</title>
+<link rel="icon" href="./public/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="./css/styles.css"><link rel="stylesheet" href="./css/operations.css">
+</head>
+<body data-page="quotes">
+<div class="app-shell">
+<aside class="app-sidebar"><div class="sidebar-brand"><a href="index.html" class="brand"><img class="brand-logo" src="assets/logotipo%20.png" alt="Mukwatela logo"></a></div>
+<nav class="sidebar-nav"><a class="nav-link" href="dashboard.html">Visão geral</a><a class="nav-link" href="services.html">Serviços</a><a class="nav-link" href="compras.html">Pedidos</a><a class="nav-link is-active" href="orcamentos.html">Orçamentos</a><a class="nav-link" href="documentos.html">Documentos</a><a class="nav-link" href="notificacoes.html">Notificações</a><a class="nav-link" href="perfil.html">Perfil</a><button class="nav-link nav-logout" data-logout type="button">Sair</button></nav></aside>
+<main class="app-main"><header class="dashboard-topbar"><div><p class="topbar-label">Área do cliente</p><h1>Orçamentos</h1></div></header>
+<div id="quotes-message" class="auth-message" hidden></div>
+<section class="panel-card"><div class="operations-toolbar"><input id="quotes-search" type="search" placeholder="Pesquisar pedido..."><select id="quotes-status"><option value="">Todos os estados</option><option value="sent">Disponíveis</option><option value="accepted">Aceites</option><option value="rejected">Recusados</option><option value="expired">Expirados</option></select></div><div id="quotes-list" class="quotes-grid"></div></section>
+</main></div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="./js/supabase.js"></script><script src="./js/quotes.js"></script><script src="./js/auth.js"></script>
+</body></html>
