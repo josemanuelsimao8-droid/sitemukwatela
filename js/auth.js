@@ -169,6 +169,8 @@
 
       document.getElementById('user-name')?.replaceChildren(document.createTextNode(name));
       document.getElementById('user-avatar')?.replaceChildren(document.createTextNode(firstLetter));
+      document.getElementById('user-email')?.replaceChildren(document.createTextNode(session.user.email || ''));
+      document.getElementById('user-role')?.replaceChildren(document.createTextNode(profile.role === 'admin' ? 'Administrador' : 'Cliente'));
     } catch (error) {
       console.error(error);
       const node = document.getElementById('user-name');
@@ -194,6 +196,7 @@
       form.elements.name.value = profile.full_name || '';
       form.elements.company.value = profile.company || '';
       form.elements.email.value = session.user.email || '';
+      form.elements.email.readOnly = true;
       form.elements.phone.value = profile.phone || '';
       form.elements.address.value = profile.address || '';
 
