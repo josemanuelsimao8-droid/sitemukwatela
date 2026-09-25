@@ -11,7 +11,7 @@
   }
   async function isAdmin(){
     const s=(await db().auth.getSession()).data?.session;if(!s)return false;
-    const r=await db().from('user_roles').select('role').eq('user_id',s.user.id).maybeSingle();
+    const r=await db().from('profiles').select('role').eq('id',s.user.id).maybeSingle();
     return r.data?.role==='admin';
   }
 
