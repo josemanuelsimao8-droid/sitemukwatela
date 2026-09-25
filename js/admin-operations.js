@@ -65,7 +65,7 @@
   }
 
   async function loadDelivery(){
-    const r=await db().from('orders').select('id,order_number,customer_id,status,total,currency,delivery_method,delivery_address,delivery_contact,delivery_status,delivery_notes,updated_at,profiles(full_name),order_items(service_name)').order('updated_at',{ascending:false}).limit(300);
+    const r=await db().from('orders').select('id,order_number,customer_id,status,total,currency,delivery_method,delivery_zone_id,delivery_fee,delivery_address,delivery_contact,delivery_status,delivery_notes,updated_at,profiles(full_name),order_items(service_name,item_type)').order('updated_at',{ascending:false}).limit(300);
     if(r.error){msg('Não foi possível carregar entregas.','error');return;}
     state.orders=r.data||[];renderDelivery();
   }
