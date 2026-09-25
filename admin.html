@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Mukwatela | Administração</title>
+  <title>Mukwatela | Backoffice</title>
   <link rel="icon" href="./public/favicon.svg" type="image/svg+xml">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -14,18 +14,17 @@
   <div class="app-shell admin-shell">
     <aside class="app-sidebar admin-sidebar">
       <div class="sidebar-brand">
-        <a href="index.html" class="brand">
-          <img class="brand-logo" src="assets/logotipo%20.png" alt="Mukwatela logo">
-        </a>
+        <a href="index.html" class="brand"><img class="brand-logo" src="assets/logotipo%20.png" alt="Mukwatela logo"></a>
       </div>
       <nav class="sidebar-nav" aria-label="Navegação administrativa">
         <button class="nav-link is-active admin-tab" type="button" data-admin-section="overview">Dashboard</button>
         <button class="nav-link admin-tab" type="button" data-admin-section="clients">Clientes</button>
-        <button class="nav-link admin-tab" type="button" data-admin-section="admins">Administradores</button>
         <button class="nav-link admin-tab" type="button" data-admin-section="orders">Pedidos</button>
         <button class="nav-link admin-tab" type="button" data-admin-section="services">Serviços</button>
-        <button class="nav-link admin-tab" type="button" data-admin-section="payments">Pagamentos</button>
+        <button class="nav-link admin-tab" type="button" data-admin-section="media">Site / Imagens</button>
         <button class="nav-link admin-tab" type="button" data-admin-section="content">Conteúdos</button>
+        <button class="nav-link admin-tab" type="button" data-admin-section="payments">Pagamentos</button>
+        <button class="nav-link admin-tab" type="button" data-admin-section="admins">Administradores</button>
         <button class="nav-link admin-tab" type="button" data-admin-section="settings">Definições</button>
         <button class="nav-link nav-logout" type="button" data-logout>Sair</button>
       </nav>
@@ -36,13 +35,11 @@
         <div>
           <p class="topbar-label">Backoffice · Mukwatela</p>
           <h1>Painel de gestão</h1>
+          <span class="admin-live-status"><i></i> Alterações do site em tempo real</span>
         </div>
         <div class="topbar-user">
-          <div class="avatar-box" aria-hidden="true">A</div>
-          <div>
-            <strong id="admin-name">Administrador</strong>
-            <small class="dashboard-user-role">Gestor do site</small>
-          </div>
+          <div class="avatar-box">A</div>
+          <div><strong id="admin-name">Administrador</strong><small class="dashboard-user-role">Gestor do site</small></div>
         </div>
       </header>
 
@@ -58,99 +55,71 @@
           <article class="summary-card"><span>Serviços ativos</span><strong id="admin-services-active">0</strong></article>
         </div>
         <div class="panel-card">
-          <h2>Pedidos recentes</h2>
-          <div class="table-responsive">
-            <table class="data-table">
-              <thead><tr><th>Pedido</th><th>Estado</th><th>Pagamento</th><th>Total</th><th>Data</th></tr></thead>
-              <tbody id="admin-order-table"></tbody>
-            </table>
+          <div class="section-header-row">
+            <div><h2>Visão geral dos pedidos</h2><p class="admin-section-note">Pesquise e filtre sem perder tempo.</p></div>
+            <div class="admin-toolbar"><input id="overview-search" class="admin-filter-input" type="search" placeholder="Pesquisar pedido..."><select id="overview-status-filter" class="admin-filter-select"><option value="">Todos os estados</option><option value="pending_payment">A aguardar pagamento</option><option value="pending_quote">A aguardar orçamento</option><option value="processing">Em processamento</option><option value="completed">Concluído</option><option value="cancelled">Cancelado</option></select></div>
           </div>
+          <div class="table-responsive"><table class="data-table"><thead><tr><th>Pedido</th><th>Estado</th><th>Pagamento</th><th>Total</th><th>Data</th></tr></thead><tbody id="admin-order-table"></tbody></table></div>
         </div>
       </section>
 
       <section class="admin-section" data-admin-panel="clients">
         <div class="panel-card">
-          <h2>Clientes</h2>
-          <div class="table-responsive">
-            <table class="data-table">
-              <thead><tr><th>Nome</th><th>Empresa</th><th>Telefone</th><th>Função</th><th>Registo</th></tr></thead>
-              <tbody id="admin-clients-table"></tbody>
-            </table>
-          </div>
+          <div class="section-header-row"><div><h2>Clientes e utilizadores</h2><p class="admin-section-note">Filtre por nome, empresa, telefone ou função.</p></div><div class="admin-toolbar"><input id="clients-search" class="admin-filter-input" type="search" placeholder="Nome, empresa ou telefone..."><select id="clients-role-filter" class="admin-filter-select"><option value="">Todas as funções</option><option value="customer">Cliente</option><option value="admin">Administrador</option></select></div></div>
+          <div class="table-responsive"><table class="data-table"><thead><tr><th>Nome</th><th>Empresa</th><th>Telefone</th><th>Função</th><th>Registo</th></tr></thead><tbody id="admin-clients-table"></tbody></table></div>
         </div>
       </section>
 
-      
-      <section class="admin-section" data-admin-panel="admins">
+      <section class="admin-section" data-admin-panel="orders">
         <div class="panel-card">
-          <div class="section-header-row">
-            <div>
-              <h2>Administradores</h2>
-              <p class="admin-section-note">Adicione utilizadores que já tenham uma conta na plataforma e dê-lhes acesso ao painel administrativo.</p>
-            </div>
-          </div>
-
-          <div class="admin-add-admin">
-            <div class="field-row">
-              <label for="new-admin-email">Email do novo administrador</label>
-              <input id="new-admin-email" type="email" autocomplete="email" placeholder="exemplo@empresa.com">
-            </div>
-            <button class="btn btn-primary" type="button" id="add-admin-btn">Adicionar administrador</button>
-            <p class="admin-help-text">A pessoa deve criar primeiro a conta no site com este mesmo email. Depois, o acesso de administrador pode ser atribuído aqui.</p>
-          </div>
-
-          <div class="admin-admin-list-wrap">
-            <h3>Administradores atuais</h3>
-            <div id="admin-admins-list" class="admin-admins-list"></div>
-          </div>
-        </div>
-      </section>
-
-<section class="admin-section" data-admin-panel="orders">
-        <div class="panel-card">
-          <h2>Gestão de pedidos e pagamentos</h2>
-          <p class="admin-section-note">O administrador confirma o pagamento após verificar o Multicaixa Express ou a transferência bancária.</p>
-          <div class="table-responsive">
-            <table class="data-table">
-              <thead><tr><th>Pedido</th><th>Cliente</th><th>Serviço</th><th>Total</th><th>Método</th><th>Estado</th><th>Pagamento</th></tr></thead>
-              <tbody id="admin-all-orders"></tbody>
-            </table>
-          </div>
+          <div class="section-header-row"><div><h2>Pedidos e pagamentos</h2><p class="admin-section-note">Atualize estado de produção e pagamento.</p></div><div class="admin-toolbar"><input id="orders-search" class="admin-filter-input" type="search" placeholder="Pedido, cliente ou serviço..."><select id="orders-status-filter" class="admin-filter-select"><option value="">Todos os estados</option><option value="pending_payment">A aguardar pagamento</option><option value="pending_quote">A aguardar orçamento</option><option value="processing">Em processamento</option><option value="completed">Concluído</option><option value="cancelled">Cancelado</option></select><select id="orders-payment-filter" class="admin-filter-select"><option value="">Todos os pagamentos</option><option value="unpaid">Não pago</option><option value="submitted">Comprovativo enviado</option><option value="confirmed">Confirmado</option><option value="rejected">Rejeitado</option></select></div></div>
+          <div class="table-responsive"><table class="data-table"><thead><tr><th>Pedido</th><th>Cliente</th><th>Serviço</th><th>Total</th><th>Método</th><th>Estado</th><th>Pagamento</th></tr></thead><tbody id="admin-all-orders"></tbody></table></div>
         </div>
       </section>
 
       <section class="admin-section" data-admin-panel="services">
         <div class="panel-card">
-          <div class="section-header-row">
-            <div>
-              <h2>Serviços</h2>
-              <p class="admin-section-note">Preços e disponibilidade são controlados pelo administrador e usam AOA.</p>
-            </div>
-          </div>
+          <div class="section-header-row"><div><h2>Serviços</h2><p class="admin-section-note">Tudo o que está aqui publicado aparece no site.</p></div><div class="admin-toolbar"><input id="services-search" class="admin-filter-input" type="search" placeholder="Pesquisar serviço..."><select id="services-category-filter" class="admin-filter-select"><option value="">Todas as categorias</option></select><select id="services-active-filter" class="admin-filter-select"><option value="">Todos</option><option value="true">Ativos</option><option value="false">Inativos</option></select></div></div>
+          <div class="inline-action-row admin-action-bar"><span class="admin-section-note">Nome, descrição, preço, imagem, características e disponibilidade.</span><button class="btn btn-primary" type="button" id="add-service-btn">Adicionar serviço</button></div>
           <div id="admin-services-list" class="admin-services-list"></div>
         </div>
       </section>
 
-      <section class="admin-section" data-admin-panel="payments">
+      <section class="admin-section" data-admin-panel="media">
         <div class="panel-card">
-          <h2>Métodos de pagamento</h2>
-          <p class="admin-section-note">Configure os dados que o cliente verá no checkout. Nenhum número de cartão bancário é guardado nesta plataforma.</p>
-          <div id="payment-methods-admin" class="admin-services-list"></div>
+          <div class="section-header-row"><div><h2>Site / Imagens</h2><p class="admin-section-note">Controle o hero, a galeria e o portfólio sem mexer no código.</p></div><div class="admin-toolbar"><input id="media-search" class="admin-filter-input" type="search" placeholder="Título, categoria ou URL..."><select id="media-type-filter" class="admin-filter-select"><option value="">Todos os tipos</option><option value="hero">Hero</option><option value="gallery">Galeria</option><option value="portfolio">Portfólio</option></select><select id="media-active-filter" class="admin-filter-select"><option value="">Todos</option><option value="true">Ativos</option><option value="false">Inativos</option></select></div></div>
+          <div class="inline-action-row admin-action-bar"><span class="admin-section-note">Pode usar caminho de imagem dentro do projeto ou URL pública.</span><button class="btn btn-primary" type="button" id="add-media-btn">Adicionar imagem</button></div>
+          <div id="admin-media-list" class="admin-media-grid"></div>
         </div>
       </section>
 
       <section class="admin-section" data-admin-panel="content">
         <div class="panel-card">
-          <h2>Conteúdos do site</h2>
-          <p class="admin-section-note">Textos do site podem ser alterados pelo administrador no banco de conteúdos.</p>
+          <div class="section-header-row"><div><h2>Conteúdos do site</h2><p class="admin-section-note">Textos públicos editáveis e atualizados em tempo real.</p></div><div class="admin-toolbar"><input id="content-search" class="admin-filter-input" type="search" placeholder="Pesquisar texto ou campo..."><select id="content-page-filter" class="admin-filter-select"><option value="">Todas as páginas</option></select><select id="content-section-filter" class="admin-filter-select"><option value="">Todas as secções</option></select></div></div>
+          <div class="inline-action-row admin-action-bar"><span class="admin-section-note">Guarde uma alteração e ela fica disponível imediatamente no site.</span><button class="btn btn-primary" type="button" id="add-content-btn">Adicionar conteúdo</button></div>
           <div id="content-admin" class="admin-services-list"></div>
+        </div>
+      </section>
+
+      <section class="admin-section" data-admin-panel="payments">
+        <div class="panel-card">
+          <div class="section-header-row"><div><h2>Métodos de pagamento</h2><p class="admin-section-note">Edite os dados mostrados no checkout.</p></div><div class="admin-toolbar"><input id="payments-search" class="admin-filter-input" type="search" placeholder="Pesquisar método..."><select id="payments-active-filter" class="admin-filter-select"><option value="">Todos</option><option value="true">Ativos</option><option value="false">Inativos</option></select></div></div>
+          <div id="payment-methods-admin" class="admin-services-list"></div>
+        </div>
+      </section>
+
+      <section class="admin-section" data-admin-panel="admins">
+        <div class="panel-card">
+          <div class="section-header-row"><div><h2>Administradores</h2><p class="admin-section-note">Conceda ou remova acesso ao backoffice.</p></div></div>
+          <div class="admin-add-admin"><div class="field-row"><label for="new-admin-email">Email do novo administrador</label><input id="new-admin-email" type="email" autocomplete="email" placeholder="exemplo@empresa.com"></div><button class="btn btn-primary" type="button" id="add-admin-btn">Adicionar administrador</button><p class="admin-help-text">A conta deve existir previamente na plataforma.</p></div>
+          <div class="admin-admin-list-wrap"><h3>Administradores atuais</h3><div id="admin-admins-list" class="admin-admins-list"></div></div>
         </div>
       </section>
 
       <section class="admin-section" data-admin-panel="settings">
         <div class="panel-card">
-          <h2>Definições gerais</h2>
-          <p class="admin-section-note">Contacto, moeda, WhatsApp, email e outros dados públicos devem ser mantidos aqui pelo administrador.</p>
+          <div class="section-header-row"><div><h2>Definições gerais</h2><p class="admin-section-note">Contacto, redes sociais, WhatsApp, moeda e rodapé.</p></div><div class="admin-toolbar"><input id="settings-search" class="admin-filter-input" type="search" placeholder="Pesquisar definição..."></div></div>
+          <div class="inline-action-row admin-action-bar"><span class="admin-section-note">Estas definições alimentam o site público.</span><button class="btn btn-primary" type="button" id="add-setting-btn">Adicionar definição</button></div>
           <div id="settings-admin" class="admin-settings-list"></div>
         </div>
       </section>
