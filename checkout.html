@@ -1,90 +1,110 @@
 <!DOCTYPE html>
 <html lang="pt-PT">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Mukwatela | Checkout</title>
-    <link rel="icon" href="./public/favicon.svg" type="image/svg+xml" />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="./css/styles.css" />
-  </head>
-  <body data-page="checkout">
-    <header class="site-header" id="top">
-      <div class="container nav-wrap">
-        <a href="index.html" class="brand" aria-label="Voltar ao início">
-          <img class="brand-logo" src="assets/logotipo%20.png" alt="Mukwatela logo" />
-        </a>
-        <nav class="main-nav" aria-label="Navegação principal">
-          <ul>
-            <li><a href="index.html">Início</a></li>
-            <li><a href="services.html">Serviços</a></li>
-            <li><a href="portfolio.html">Portfólio</a></li>
-            <li><a href="contactos.html">Contactos</a></li>
-          </ul>
-        </nav>
-        <div class="header-actions">
-          <a class="btn btn-secondary" href="dashboard.html">Dashboard</a>
-          <a class="btn btn-whatsapp" href="https://wa.me/975397984?text=Olá%2C%20gostaria%20de%20solicitar%20um%20orçamento." target="_blank" rel="noreferrer">Falar no WhatsApp</a>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mukwatela | Novo pedido</title>
+  <link rel="icon" href="./public/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./css/styles.css">
+</head>
+<body data-page="checkout">
+  <header class="site-header" id="top">
+    <div class="container nav-wrap">
+      <a href="index.html" class="brand" aria-label="Voltar ao início">
+        <img class="brand-logo" src="assets/logotipo%20.png" alt="Mukwatela logo">
+      </a>
+      <nav class="main-nav" aria-label="Navegação principal">
+        <ul>
+          <li><a href="index.html">Início</a></li>
+          <li><a href="services.html">Serviços</a></li>
+          <li><a href="portfolio.html">Portfólio</a></li>
+          <li><a href="contactos.html">Contactos</a></li>
+        </ul>
+      </nav>
+      <div class="header-actions">
+        <a class="btn btn-secondary" href="dashboard.html">Dashboard</a>
+        <a class="btn btn-whatsapp" href="https://wa.me/975397984?text=Olá%2C%20gostaria%20de%20solicitar%20um%20orçamento." target="_blank" rel="noreferrer">Falar no WhatsApp</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="section checkout-shell">
+    <div class="container checkout-layout">
+      <div class="checkout-summary">
+        <div class="panel-card checkout-panel">
+          <span class="eyebrow">Etapa 1 de 2</span>
+          <h2>Resumo do serviço</h2>
+          <div id="checkout-service-summary"></div>
         </div>
       </div>
-    </header>
 
-    <main class="section checkout-shell">
-      <div class="container checkout-layout">
-        <div class="checkout-summary">
-          <div class="panel-card checkout-panel">
-            <h2>Resumo do serviço</h2>
-            <div id="checkout-service-summary"></div>
-          </div>
-        </div>
+      <div class="checkout-form-panel">
+        <div class="panel-card checkout-panel">
+          <span class="eyebrow">Pedido</span>
+          <h2>Detalhes do pedido</h2>
+          <div id="shop-message" class="auth-message" hidden aria-live="polite"></div>
+          <form id="checkout-form" class="checkout-form">
+            <div class="field-row field-two">
+              <div>
+                <label for="checkout-name">Nome</label>
+                <input id="checkout-name" name="name" type="text" readonly>
+              </div>
+              <div>
+                <label for="service-quantity">Quantidade</label>
+                <input id="service-quantity" type="number" min="1" value="1" required>
+              </div>
+            </div>
 
-        <div class="checkout-form-panel">
-          <div class="panel-card checkout-panel">
-            <h2>Dados do cliente</h2>
-            <form id="checkout-form" class="checkout-form">
-              <div class="field-row">
-                <div>
-                  <label for="checkout-name">Nome</label>
-                  <input id="checkout-name" name="name" type="text" readonly />
-                </div>
+            <div class="field-row field-two">
+              <div>
+                <label for="service-format">Formato</label>
+                <select id="service-format">
+                  <option value="Padrão">Padrão</option>
+                  <option value="Médio">Médio</option>
+                  <option value="Grande">Grande</option>
+                </select>
               </div>
-                <div class="field-row field-two">
-                  <div>
-                    <label for="service-material">Material</label>
-                    <input id="service-material" type="text" placeholder="Material pretendido" />
-                  </div>
-                  <div>
-                    <label for="service-dimensions">Dimensões</label>
-                    <input id="service-dimensions" type="text" placeholder="Ex.: A4" />
-                  </div>
-                </div>
-                <div class="field-row">
-                  <label for="service-observations">Observações</label>
-                  <textarea id="service-observations" rows="4" placeholder="Detalhes relevantes do pedido."></textarea>
-                </div>
-                <div class="field-row">
-                  <label for="service-deadline">Prazo pretendido</label>
-                  <input id="service-deadline" type="text" placeholder="Ex.: 7 dias úteis" />
-                </div>
+              <div>
+                <label for="service-material">Material</label>
+                <input id="service-material" type="text" placeholder="Material pretendido">
               </div>
+            </div>
 
-              <h3 class="checkout-subtitle">Detalhes do pedido</h3>
-              <div class="checkout-price-list">
-                <div><span>Total previsto</span><strong id="checkout-total">Sob orçamento</strong></div>
+            <div class="field-row field-two">
+              <div>
+                <label for="service-dimensions">Dimensões</label>
+                <input id="service-dimensions" type="text" placeholder="Ex.: A4">
               </div>
-              <button class="btn btn-primary btn-block" type="submit">CONFIRMAR PEDIDO</button>
-            </form>
-          </div>
+              <div>
+                <label for="service-deadline">Prazo pretendido</label>
+                <input id="service-deadline" type="text" placeholder="Ex.: 7 dias úteis">
+              </div>
+            </div>
+
+            <div class="field-row">
+              <label for="service-observations">Observações</label>
+              <textarea id="service-observations" rows="5" placeholder="Descreva o que precisa para a Mukwatela preparar o pedido."></textarea>
+            </div>
+
+            <div class="checkout-price-list">
+              <div><span>Total previsto</span><strong id="checkout-total">Sob orçamento</strong></div>
+            </div>
+
+            <button class="btn btn-primary btn-block" type="submit">CONFIRMAR PEDIDO</button>
+          </form>
         </div>
       </div>
-    </main>
+    </div>
+  </main>
 
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="./js/supabase.js"></script>
-    <script src="./js/shop.js"></script>
-    <script src="./js/company.js"></script>
-    <script src="./js/main.js"></script>
-  </body>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="./js/supabase.js"></script>
+  <script src="./js/auth.js"></script>
+  <script src="./js/shop.js"></script>
+  <script src="./js/company.js"></script>
+  <script src="./js/main.js"></script>
+</body>
 </html>
