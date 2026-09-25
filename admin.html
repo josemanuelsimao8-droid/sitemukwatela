@@ -21,6 +21,7 @@
       <nav class="sidebar-nav" aria-label="Navegação administrativa">
         <button class="nav-link is-active admin-tab" type="button" data-admin-section="overview">Dashboard</button>
         <button class="nav-link admin-tab" type="button" data-admin-section="clients">Clientes</button>
+        <button class="nav-link admin-tab" type="button" data-admin-section="admins">Administradores</button>
         <button class="nav-link admin-tab" type="button" data-admin-section="orders">Pedidos</button>
         <button class="nav-link admin-tab" type="button" data-admin-section="services">Serviços</button>
         <button class="nav-link admin-tab" type="button" data-admin-section="payments">Pagamentos</button>
@@ -79,7 +80,33 @@
         </div>
       </section>
 
-      <section class="admin-section" data-admin-panel="orders">
+      
+      <section class="admin-section" data-admin-panel="admins">
+        <div class="panel-card">
+          <div class="section-header-row">
+            <div>
+              <h2>Administradores</h2>
+              <p class="admin-section-note">Adicione utilizadores que já tenham uma conta na plataforma e dê-lhes acesso ao painel administrativo.</p>
+            </div>
+          </div>
+
+          <div class="admin-add-admin">
+            <div class="field-row">
+              <label for="new-admin-email">Email do novo administrador</label>
+              <input id="new-admin-email" type="email" autocomplete="email" placeholder="exemplo@empresa.com">
+            </div>
+            <button class="btn btn-primary" type="button" id="add-admin-btn">Adicionar administrador</button>
+            <p class="admin-help-text">A pessoa deve criar primeiro a conta no site com este mesmo email. Depois, o acesso de administrador pode ser atribuído aqui.</p>
+          </div>
+
+          <div class="admin-admin-list-wrap">
+            <h3>Administradores atuais</h3>
+            <div id="admin-admins-list" class="admin-admins-list"></div>
+          </div>
+        </div>
+      </section>
+
+<section class="admin-section" data-admin-panel="orders">
         <div class="panel-card">
           <h2>Gestão de pedidos e pagamentos</h2>
           <p class="admin-section-note">O administrador confirma o pagamento após verificar o Multicaixa Express ou a transferência bancária.</p>
