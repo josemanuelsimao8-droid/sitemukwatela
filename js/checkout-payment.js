@@ -44,8 +44,15 @@
 
     const service = await loadService(selectedId);
     if (!service) {
-      message('O serviço selecionado já não está disponível.', 'error');
+      message('O item selecionado já não está disponível.', 'error');
       return;
+    }
+
+    const itemTypeNode = document.getElementById('checkout-item-type');
+    if (itemTypeNode) {
+      itemTypeNode.textContent = service.item_type === 'material'
+        ? 'Material para compra · indique a quantidade e a forma de entrega.'
+        : 'Serviço personalizado · preencha os detalhes necessários para execução.';
     }
 
     const quantity = Math.max(1, Number(document.getElementById('service-quantity')?.value || 1));
