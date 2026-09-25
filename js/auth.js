@@ -183,7 +183,8 @@
             full_name: name,
             phone,
             company,
-            address: ''
+            address: '',
+            terms_accepted: 'true'
           },
           emailRedirectTo: new URL('auth.html', window.location.href).href
         }
