@@ -136,7 +136,7 @@
           ? '<a class="btn btn-primary" href="admin.html">Gerir no painel</a>'
           : '<button class="btn btn-primary" type="button" data-add-cart="' + service.id + '">Adicionar ao carrinho</button>';
         return '<article class="service-catalog-card">' +
-          '<a class="service-catalog-media" href="produto.html?id=' + encodeURIComponent(service.id) + '" aria-label="Ver ' + service.name + '">' +
+          '<a class="service-catalog-media" href="produto.html?id=' + encodeURIComponent(service.id) + '" aria-label="Ver ' + esc(service.name) + '">' +
             (service.image_url ? '<img src="' + esc(service.image_url) + '" alt="' + esc(service.name) + '" loading="lazy">' : '') +
           '</a>' +
           '<div class="service-catalog-body">' +
