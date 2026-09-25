@@ -19,13 +19,6 @@
     });
   }
 
-  async function isAdmin() {
-    const session = (await client().auth.getSession()).data?.session;
-    if (!session) return false;
-    const result = await client().from('user_roles').select('role').eq('user_id', session.user.id).maybeSingle();
-    return result.data?.role === 'admin';
-  }
-
   function statusClass(status) {
     return 'payment-admin-pill payment-admin-' + String(status || 'pending').replace(/[^a-z_]/g, '');
   }
@@ -196,8 +189,5 @@
       .subscribe();
   }
 
-  document.addEventListener('DOMContentLoaded', async () => {
-    if (!await isAdmin()) return;
-    mount();
-  });
+  document.addEventListener('DOMContentLoaded', mount);
 })();
