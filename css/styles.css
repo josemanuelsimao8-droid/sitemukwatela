@@ -2272,3 +2272,6 @@ input:focus, textarea:focus, select:focus { border-color: #e7ae24; box-shadow: 0
   .media-upload-row input[type="file"],
   .media-upload-row .btn { width: 100%; }
 }
+
+
+.catalog-stock { display:block; margin-top:4px; font-size:0.74rem; color:var(--muted); }
