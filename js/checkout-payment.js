@@ -54,6 +54,10 @@
         ? 'Material para compra · indique a quantidade e a forma de entrega.'
         : 'Serviço personalizado · preencha os detalhes necessários para execução.';
     }
+    const initialPaymentStage = form.querySelector('.checkout-payment-stage');
+    if (initialPaymentStage) initialPaymentStage.hidden = service.unit_price === null;
+    const initialSubmit = form.querySelector('button[type="submit"]');
+    if (initialSubmit) initialSubmit.textContent = service.unit_price === null ? 'ENVIAR PARA ORÇAMENTO' : 'CONTINUAR PARA PAGAMENTO';
 
     const quantity = Math.max(1, Number(document.getElementById('service-quantity')?.value || 1));
     if (service.item_type === 'material' && service.stock_quantity !== null && quantity > Number(service.stock_quantity)) {
