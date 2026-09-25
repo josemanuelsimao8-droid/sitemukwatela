@@ -18,12 +18,12 @@
   }
 
   async function getSession() {
-    const { data, error } = await client().auth.getSession();
+    const { data, error } = await client().auth.getUser();
     if (error) {
-      console.error(error);
+      console.error('Supabase auth:', error);
       return null;
     }
-    return data.session;
+    return data.user ? { user: data.user } : null;
   }
 
   async function getAppRole(userId) {
@@ -39,14 +39,7 @@
       return roleResult.data.role;
     }
 
-    // Compatibility fallback while existing accounts are migrated.
-    const profileResult = await client()
-      .from('profiles')
-      .select('role')
-      .eq('id', userId)
-      .maybeSingle();
-
-    return profileResult.data?.role || 'customer';
+    return 'customer';
   }
 
   async function getProfile(userId) {
@@ -69,6 +62,20 @@
     return session;
   }
 
+  function consumeAuthReturn() {
+    const raw = sessionStorage.getItem('mukwatela-auth-return');
+    sessionStorage.removeItem('mukwatela-auth-return');
+    if (!raw || !raw.startsWith('/') || raw.startsWith('//')) return null;
+    try {
+      const safeUrl = new URL(raw, window.location.origin);
+      const blocked = ['/auth.html', '/register.html', '/recuperar-password.html'].includes(safeUrl.pathname);
+      if (safeUrl.origin !== window.location.origin || blocked) return null;
+      return safeUrl.pathname + safeUrl.search + safeUrl.hash;
+    } catch (_) {
+      return null;
+    }
+  }
+
   async function redirectByRole(session, { allowPendingCheckout = false } = {}) {
     if (!session?.user?.id) {
       window.location.href = 'auth.html';
@@ -76,11 +83,17 @@
     }
 
     const role = await getAppRole(session.user.id);
+    const authReturn = consumeAuthReturn();
 
     if (role === 'admin') {
       sessionStorage.removeItem('mukwatela-selected-service-id');
       sessionStorage.removeItem('mukwatela-selected-service');
       window.location.href = 'admin.html';
+      return true;
+    }
+
+    if (authReturn) {
+      window.location.href = authReturn;
       return true;
     }
 
