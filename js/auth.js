@@ -17,20 +17,6 @@
     button.textContent = loading ? 'Aguarde...' : button.dataset.originalText;
   }
 
-  function redirectAfterAuth() {
-    const pending = sessionStorage.getItem('mukwatela-selected-service-id');
-    if (pending) {
-      window.location.href = 'checkout.html';
-      return true;
-    }
-    const next = new URLSearchParams(window.location.search).get('next');
-    if (next && /^[a-zA-Z0-9_-]+\.html$/.test(next)) {
-      window.location.href = next;
-      return true;
-    }
-    return false;
-  }
-
   async function getSession() {
     const { data, error } = await client().auth.getSession();
     if (error) {
@@ -40,10 +26,33 @@
     return data.session;
   }
 
+  async function getAppRole(userId) {
+    if (!userId) return 'customer';
+
+    const roleResult = await client()
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', userId)
+      .maybeSingle();
+
+    if (!roleResult.error && roleResult.data?.role) {
+      return roleResult.data.role;
+    }
+
+    // Compatibility fallback while existing accounts are migrated.
+    const profileResult = await client()
+      .from('profiles')
+      .select('role')
+      .eq('id', userId)
+      .maybeSingle();
+
+    return profileResult.data?.role || 'customer';
+  }
+
   async function getProfile(userId) {
     const { data, error } = await client()
       .from('profiles')
-      .select('id, full_name, phone, company, address, avatar_url, role, created_at, updated_at')
+      .select('id, full_name, phone, company, address, avatar_url, created_at, updated_at')
       .eq('id', userId)
       .maybeSingle();
 
@@ -60,13 +69,37 @@
     return session;
   }
 
+  async function redirectByRole(session, { allowPendingCheckout = false } = {}) {
+    if (!session?.user?.id) {
+      window.location.href = 'auth.html';
+      return true;
+    }
+
+    const role = await getAppRole(session.user.id);
+
+    if (role === 'admin') {
+      sessionStorage.removeItem('mukwatela-selected-service-id');
+      sessionStorage.removeItem('mukwatela-selected-service');
+      window.location.href = 'admin.html';
+      return true;
+    }
+
+    if (allowPendingCheckout && sessionStorage.getItem('mukwatela-selected-service-id')) {
+      window.location.href = 'checkout.html';
+      return true;
+    }
+
+    window.location.href = 'dashboard.html';
+    return true;
+  }
+
   async function initLogin() {
     const form = document.getElementById('login-form');
     if (!form) return;
 
     const session = await getSession();
     if (session) {
-      if (!redirectAfterAuth()) window.location.href = 'dashboard.html';
+      await redirectByRole(session, { allowPendingCheckout: true });
       return;
     }
 
@@ -80,15 +113,18 @@
       const { data, error } = await client().auth.signInWithPassword({ email, password });
 
       if (error) {
-        message(error.message === 'Email not confirmed'
-          ? 'Confirme o seu email antes de entrar.'
-          : 'Email ou palavra-passe incorretos.', 'error');
+        message(
+          error.message === 'Email not confirmed'
+            ? 'Confirme o seu email antes de entrar.'
+            : 'Email ou palavra-passe incorretos.',
+          'error'
+        );
         setLoading(form, false);
         return;
       }
 
       if (data.session) {
-        if (!redirectAfterAuth()) window.location.href = 'dashboard.html';
+        await redirectByRole(data.session, { allowPendingCheckout: true });
       }
     });
 
@@ -103,9 +139,12 @@
         redirectTo: new URL('recuperar-password.html', window.location.href).href
       });
 
-      message(error
-        ? 'Não foi possível enviar o email de recuperação.'
-        : 'Enviámos um link de recuperação para o seu email.', error ? 'error' : 'success');
+      message(
+        error
+          ? 'Não foi possível enviar o email de recuperação.'
+          : 'Enviámos um link de recuperação para o seu email.',
+        error ? 'error' : 'success'
+      );
     });
   }
 
@@ -157,7 +196,7 @@
       }
 
       if (data.session) {
-        window.location.href = 'dashboard.html';
+        await redirectByRole(data.session);
         return;
       }
 
@@ -170,6 +209,12 @@
   async function initDashboard() {
     const session = await requireSession();
     if (!session) return;
+
+    const role = await getAppRole(session.user.id);
+    if (role === 'admin') {
+      window.location.href = 'admin.html';
+      return;
+    }
 
     try {
       const profile = await getProfile(session.user.id);
@@ -184,7 +229,7 @@
       document.getElementById('user-name')?.replaceChildren(document.createTextNode(name));
       document.getElementById('user-avatar')?.replaceChildren(document.createTextNode(firstLetter));
       document.getElementById('user-email')?.replaceChildren(document.createTextNode(session.user.email || ''));
-      document.getElementById('user-role')?.replaceChildren(document.createTextNode(profile.role === 'admin' ? 'Administrador' : 'Cliente'));
+      document.getElementById('user-role')?.replaceChildren(document.createTextNode('Cliente'));
     } catch (error) {
       console.error(error);
       const node = document.getElementById('user-name');
@@ -195,6 +240,12 @@
   async function initProfile() {
     const session = await requireSession();
     if (!session) return;
+
+    const role = await getAppRole(session.user.id);
+    if (role === 'admin') {
+      window.location.href = 'admin.html';
+      return;
+    }
 
     const form = document.getElementById('profile-form');
     if (!form) return;
