@@ -29,6 +29,7 @@
         <button class="nav-link admin-tab" type="button" data-admin-section="documents">Documentos</button>
         <button class="nav-link admin-tab" type="button" data-admin-section="delivery">Entregas</button>
         <button class="nav-link admin-tab" type="button" data-admin-section="stock">Stock / Inventário</button>
+        <button class="nav-link admin-tab" type="button" data-admin-section="delivery-zones">Zonas de entrega</button>
         <button class="nav-link admin-tab" type="button" data-admin-section="reports">Relatórios</button>
         <button class="nav-link admin-tab" type="button" data-admin-section="admins">Administradores</button>
         <button class="nav-link admin-tab" type="button" data-admin-section="settings">Definições</button>
@@ -135,6 +136,18 @@
         </div>
       </section>
 
+
+
+      <section class="admin-section" data-admin-panel="delivery-zones">
+        <div class="panel-card">
+          <div class="section-header-row"><div><h2>Zonas e preços de entrega</h2><p class="admin-section-note">Defina as zonas disponíveis e o custo de entrega aplicado no checkout.</p></div></div>
+          <div class="inline-action-row admin-action-bar">
+            <span class="admin-section-note">O valor da entrega é calculado no servidor a partir da zona escolhida pelo cliente.</span>
+            <button class="btn btn-primary" type="button" id="add-delivery-zone-btn">+ Adicionar zona</button>
+          </div>
+          <div id="admin-delivery-zones" class="admin-services-list"></div>
+        </div>
+      </section>
 
       <section class="admin-section" data-admin-panel="stock">
         <div class="panel-card">
