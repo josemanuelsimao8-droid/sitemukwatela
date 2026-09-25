@@ -50,6 +50,7 @@
             <button class="auth-tab is-active" type="button">Criar conta</button>
           </div>
           <form id="register-form" class="auth-form">
+            <div id="auth-message" class="auth-message" hidden aria-live="polite"></div>
             <div class="field-row field-two">
               <div>
                 <label for="register-name">Nome completo</label>
@@ -90,8 +91,10 @@
       </section>
     </main>
 
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="./js/supabase.js"></script>
+    <script src="./js/auth.js"></script>
     <script src="./js/company.js"></script>
     <script src="./js/main.js"></script>
-    <script src="./js/mukwatela-demo.js"></script>
   </body>
 </html>
