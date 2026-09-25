@@ -30,3 +30,24 @@
 .checkout-form [readonly] {
   cursor: text;
 }
+
+
+.payment-method-empty{
+  padding:16px;
+  border:1px dashed var(--line);
+  background:#fff8e6;
+}
+.payment-method-empty strong{display:block;margin-bottom:4px;color:var(--black);}
+.payment-method-empty p{margin:0;font-size:.9rem;}
+.admin-payment-center input,
+.admin-payment-center textarea,
+.payment-add-card input,
+.payment-add-card textarea{
+  position:relative;
+  z-index:3;
+  pointer-events:auto;
+  user-select:text;
+  -webkit-user-select:text;
+}
+.payment-add-card input:disabled,
+.payment-add-card textarea:disabled{opacity:.65;}
