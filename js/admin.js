@@ -1,395 +1,457 @@
 (() => {
   const db = () => window.supabaseClient;
+  const filters = {
+    overviewSearch:'', overviewStatus:'',
+    clientsSearch:'', clientsRole:'',
+    ordersSearch:'', ordersStatus:'', ordersPayment:'',
+    servicesSearch:'', servicesCategory:'', servicesActive:'',
+    mediaSearch:'', mediaType:'', mediaActive:'',
+    contentSearch:'', contentPage:'', contentSection:'',
+    paymentsSearch:'', paymentsActive:'', settingsSearch:''
+  };
+  const cache = { clients:[], orders:[], services:[], media:[], content:[], payments:[], settings:[] };
 
-  const money = (value, currency = 'AOA') =>
-    value === null || value === undefined || value === ''
-      ? 'Sob orçamento'
-      : String(currency) + ' ' + Number(value).toLocaleString('pt-PT', {
-          minimumFractionDigits: 2,
-          maximumFractionDigits: 2
-        });
+  const esc = (value) => String(value ?? '').replace(/[&<>"']/g, (char) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[char]));
+  const money = (value, currency='AOA') => value === null || value === undefined || value === '' ? 'Sob orçamento' : String(currency) + ' ' + Number(value).toLocaleString('pt-PT',{minimumFractionDigits:2,maximumFractionDigits:2});
+  const fmtDate = (value) => value ? new Date(value).toLocaleString('pt-PT') : '—';
 
-  const esc = (value) => String(value ?? '').replace(/[&<>"']/g, (char) => ({
-    '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'
-  }[char]));
-
-  function msg(text, type = 'info') {
-    const node = document.getElementById('admin-message');
-    if (!node) return;
-    node.textContent = text;
-    node.dataset.type = type;
-    node.hidden = false;
+  function msg(text,type='info'){
+    const node=document.getElementById('admin-message');
+    if(!node)return;
+    node.textContent=text;
+    node.dataset.type=type;
+    node.hidden=false;
   }
 
-  async function requireAdmin() {
-    const sessionResult = await db().auth.getSession();
-    const session = sessionResult.data?.session;
-    if (!session) {
-      window.location.href = 'auth.html';
-      return null;
-    }
+  async function appRole(userId){
+    const role=await db().from('user_roles').select('role').eq('user_id',userId).maybeSingle();
+    if(!role.error && role.data?.role)return role.data.role;
+    const profile=await db().from('profiles').select('role').eq('id',userId).maybeSingle();
+    return profile.data?.role||'customer';
+  }
 
-    const result = await db().from('profiles')
-      .select('id,full_name,role')
-      .eq('id', session.user.id)
-      .maybeSingle();
-
-    if (result.error || result.data?.role !== 'admin') {
-      window.location.href = 'dashboard.html';
-      return null;
-    }
+  async function requireAdmin(){
+    const session=(await db().auth.getSession()).data?.session;
+    if(!session){window.location.href='auth.html';return null;}
+    const role=await appRole(session.user.id);
+    if(role!=='admin'){window.location.href='dashboard.html';return null;}
     return session;
   }
 
-  async function loadOverview() {
-    const [clients, orders, paid, services] = await Promise.all([
-      db().from('profiles').select('id', { count: 'exact', head: true }),
-      db().from('orders').select('id,total,payment_status,status,created_at').order('created_at', { ascending: false }),
-      db().from('orders').select('id,total').eq('payment_status', 'confirmed'),
-      db().from('services').select('id', { count: 'exact', head: true }).eq('is_active', true)
+  function filtered(list, search, fields){
+    const term=String(search||'').trim().toLowerCase();
+    if(!term)return list;
+    return list.filter(item=>fields.some(field=>String(field(item)??'').toLowerCase().includes(term)));
+  }
+
+  async function loadOverview(){
+    const [clients,orders,paid,services]=await Promise.all([
+      db().from('profiles').select('id,role'),
+      db().from('orders').select('id,order_number,total,payment_status,status,created_at').order('created_at',{ascending:false}).limit(100),
+      db().from('orders').select('id,total').eq('payment_status','confirmed'),
+      db().from('services').select('id').eq('is_active',true)
     ]);
-
-    document.getElementById('admin-customers').textContent = String(clients.count ?? 0);
-    document.getElementById('admin-orders').textContent = String(orders.data?.length ?? 0);
-    document.getElementById('admin-payments').textContent = String(paid.data?.length ?? 0);
-    document.getElementById('admin-services-active').textContent = String(services.count ?? 0);
-
-    const revenue = (paid.data || []).reduce((sum, row) => sum + Number(row.total || 0), 0);
-    document.getElementById('admin-revenue').textContent = money(revenue);
-
-    const pending = (orders.data || []).filter((row) =>
-      ['pending_payment','pending_quote','pending','processing'].includes(row.status)
-    ).length;
-    document.getElementById('admin-pending').textContent = String(pending);
-
-    const body = document.getElementById('admin-order-table');
-    if (!body) return;
-    body.innerHTML = (orders.data || []).slice(0, 8).map((order) =>
-      '<tr><td>' + esc(order.id.slice(0,8)) + '</td>' +
-      '<td>' + esc(order.status) + '</td>' +
-      '<td>' + esc(order.payment_status) + '</td>' +
-      '<td>' + money(order.total) + '</td>' +
-      '<td>' + new Date(order.created_at).toLocaleDateString('pt-PT') + '</td></tr>'
-    ).join('') || '<tr><td colspan="5">Sem pedidos.</td></tr>';
+    const customerCount=(clients.data||[]).filter(item=>item.role!=='admin').length;
+    document.getElementById('admin-customers').textContent=String(customerCount);
+    document.getElementById('admin-orders').textContent=String(orders.data?.length||0);
+    document.getElementById('admin-payments').textContent=String(paid.data?.length||0);
+    document.getElementById('admin-services-active').textContent=String(services.data?.length||0);
+    document.getElementById('admin-revenue').textContent=money((paid.data||[]).reduce((sum,row)=>sum+Number(row.total||0),0));
+    document.getElementById('admin-pending').textContent=String((orders.data||[]).filter(row=>['pending','pending_payment','pending_quote','processing'].includes(row.status)).length);
+    cache.orders=orders.data||[];
+    renderOverview();
   }
 
-  async function loadClients() {
-    const result = await db().from('profiles')
-      .select('id,full_name,phone,company,role,created_at')
-      .order('created_at', { ascending: false });
-
-    if (result.error) {
-      msg('Não foi possível carregar clientes.', 'error');
-      return;
-    }
-
-    const body = document.getElementById('admin-clients-table');
-    body.innerHTML = (result.data || []).map((client) =>
-      '<tr><td>' + esc(client.full_name) + '</td>' +
-      '<td>' + esc(client.company || '—') + '</td>' +
-      '<td>' + esc(client.phone || '—') + '</td>' +
-      '<td>' + esc(client.role) + '</td>' +
-      '<td>' + new Date(client.created_at).toLocaleDateString('pt-PT') + '</td></tr>'
-    ).join('') || '<tr><td colspan="5">Sem clientes.</td></tr>';
+  function renderOverview(){
+    const body=document.getElementById('admin-order-table');
+    if(!body)return;
+    const data=filtered(cache.orders,filters.overviewSearch,[x=>x.order_number,x=>x.id,x=>x.status,x=>x.payment_status]).filter(x=>!filters.overviewStatus||x.status===filters.overviewStatus).slice(0,12);
+    body.innerHTML=data.map(order=>'<tr><td>'+esc(order.order_number||order.id.slice(0,8))+'</td><td>'+esc(order.status)+'</td><td>'+esc(order.payment_status)+'</td><td>'+money(order.total)+'</td><td>'+fmtDate(order.created_at)+'</td></tr>').join('')||'<tr><td colspan="5">Sem pedidos encontrados.</td></tr>';
   }
 
-  async function loadOrders() {
-    const result = await db().from('orders')
-      .select('id,order_number,customer_id,status,total,currency,payment_method,payment_status,created_at,profiles(full_name),order_items(service_name,quantity)')
-      .order('created_at', { ascending: false });
-
-    const body = document.getElementById('admin-all-orders');
-    if (result.error) {
-      msg('Não foi possível carregar pedidos.', 'error');
-      return;
-    }
-
-    body.innerHTML = (result.data || []).map((order) => {
-      const item = order.order_items?.[0];
-      return '<tr>' +
-        '<td>' + esc(order.order_number) + '</td>' +
-        '<td>' + esc(order.profiles?.full_name || 'Cliente') + '</td>' +
-        '<td>' + esc(item?.service_name || 'Serviço') + '</td>' +
-        '<td>' + money(order.total, order.currency) + '</td>' +
-        '<td>' + esc(order.payment_method === 'multicaixa_express' ? 'Multicaixa Express' : order.payment_method === 'transferencia' ? 'Transferência' : '—') + '</td>' +
-        '<td><select data-order-status="' + order.id + '">' +
-          '<option value="pending_payment" ' + (order.status === 'pending_payment' ? 'selected' : '') + '>A aguardar pagamento</option>' +
-          '<option value="pending_quote" ' + (order.status === 'pending_quote' ? 'selected' : '') + '>A aguardar orçamento</option>' +
-          '<option value="processing" ' + (order.status === 'processing' ? 'selected' : '') + '>Em processamento</option>' +
-          '<option value="completed" ' + (order.status === 'completed' ? 'selected' : '') + '>Concluído</option>' +
-          '<option value="cancelled" ' + (order.status === 'cancelled' ? 'selected' : '') + '>Cancelado</option>' +
-        '</select></td>' +
-        '<td><select data-payment-status="' + order.id + '">' +
-          '<option value="unpaid" ' + (order.payment_status === 'unpaid' ? 'selected' : '') + '>Não pago</option>' +
-          '<option value="submitted" ' + (order.payment_status === 'submitted' ? 'selected' : '') + '>Comprovativo enviado</option>' +
-          '<option value="confirmed" ' + (order.payment_status === 'confirmed' ? 'selected' : '') + '>Pagamento confirmado</option>' +
-          '<option value="rejected" ' + (order.payment_status === 'rejected' ? 'selected' : '') + '>Pagamento rejeitado</option>' +
-        '</select></td>' +
-        '</tr>';
-    }).join('') || '<tr><td colspan="7">Sem pedidos.</td></tr>';
-
-    body.querySelectorAll('[data-order-status]').forEach((select) => {
-      select.addEventListener('change', () => updateOrder(select.dataset.orderStatus, { status: select.value }));
-    });
-    body.querySelectorAll('[data-payment-status]').forEach((select) => {
-      select.addEventListener('change', () => updateOrder(select.dataset.paymentStatus, { payment_status: select.value }));
-    });
+  async function loadClients(){
+    const result=await db().from('profiles').select('id,full_name,phone,company,role,created_at').order('created_at',{ascending:false});
+    if(result.error){msg('Não foi possível carregar clientes.','error');return;}
+    cache.clients=result.data||[];
+    renderClients();
   }
 
-  async function updateOrder(id, patch) {
-    const result = await db().from('orders').update({
-      ...patch,
-      updated_at: new Date().toISOString()
-    }).eq('id', id);
-    msg(result.error ? 'Não foi possível atualizar o pedido.' : 'Pedido atualizado.', result.error ? 'error' : 'success');
+  function renderClients(){
+    const body=document.getElementById('admin-clients-table');
+    if(!body)return;
+    const data=filtered(cache.clients,filters.clientsSearch,[x=>x.full_name,x=>x.phone,x=>x.company,x=>x.role]).filter(x=>!filters.clientsRole||x.role===filters.clientsRole);
+    body.innerHTML=data.map(client=>'<tr><td>'+esc(client.full_name)+'</td><td>'+esc(client.company||'—')+'</td><td>'+esc(client.phone||'—')+'</td><td>'+esc(client.role)+'</td><td>'+fmtDate(client.created_at)+'</td></tr>').join('')||'<tr><td colspan="5">Sem resultados.</td></tr>';
   }
 
-  async function loadServices() {
-    const result = await db().from('services')
-      .select('id,name,category,description,unit_price,currency,is_active,sort_order')
-      .order('sort_order', { ascending: true });
+  async function loadOrders(){
+    const result=await db().from('orders').select('id,order_number,customer_id,status,total,currency,payment_method,payment_status,created_at,profiles(full_name),order_items(service_name,quantity)').order('created_at',{ascending:false}).limit(250);
+    if(result.error){msg('Não foi possível carregar pedidos.','error');return;}
+    cache.orders=result.data||[];
+    renderOrders();
+  }
 
-    if (result.error) {
-      msg('Não foi possível carregar os serviços.', 'error');
-      return;
-    }
+  function renderOrders(){
+    const body=document.getElementById('admin-all-orders');
+    if(!body)return;
+    const data=filtered(cache.orders,filters.ordersSearch,[x=>x.order_number,x=>x.profiles?.full_name,x=>x.order_items?.map(i=>i.service_name).join(' '),x=>x.payment_method,x=>x.status,x=>x.payment_status])
+      .filter(x=>!filters.ordersStatus||x.status===filters.ordersStatus)
+      .filter(x=>!filters.ordersPayment||x.payment_status===filters.ordersPayment);
 
-    const list = document.getElementById('admin-services-list');
-    list.innerHTML = (result.data || []).map((service) =>
-      '<article class="admin-service-editor">' +
-      '<div class="field-row field-two">' +
-      '<div><label>Nome</label><input data-service="' + service.id + '" data-field="name" value="' + esc(service.name) + '"></div>' +
-      '<div><label>Categoria</label><input data-service="' + service.id + '" data-field="category" value="' + esc(service.category || '') + '"></div>' +
-      '</div>' +
-      '<div class="field-row"><label>Descrição</label><textarea data-service="' + service.id + '" data-field="description" rows="3">' + esc(service.description || '') + '</textarea></div>' +
-      '<div class="field-row field-two">' +
-      '<div><label>Preço (AOA)</label><input type="number" step="0.01" min="0" data-service="' + service.id + '" data-field="unit_price" value="' + (service.unit_price ?? '') + '"></div>' +
-      '<div><label>Ativo no site</label><select data-service="' + service.id + '" data-field="is_active">' +
-        '<option value="true" ' + (service.is_active ? 'selected' : '') + '>Sim</option>' +
-        '<option value="false" ' + (!service.is_active ? 'selected' : '') + '>Não</option>' +
-      '</select></div>' +
-      '</div>' +
-      '<button class="btn btn-primary" type="button" data-save-service="' + service.id + '">Guardar serviço</button>' +
-      '</article>'
-    ).join('') || '<p>Sem serviços.</p>';
+    body.innerHTML=data.map(order=>{
+      const item=order.order_items?.[0];
+      const payment=order.payment_method==='multicaixa_express'?'Multicaixa Express':order.payment_method==='transferencia'?'Transferência':'—';
+      return '<tr><td>'+esc(order.order_number)+'</td><td>'+esc(order.profiles?.full_name||'Cliente')+'</td><td>'+esc(item?.service_name||'Serviço')+'</td><td>'+money(order.total,order.currency)+'</td><td>'+esc(payment)+'</td>' +
+        '<td><select data-order-status="'+order.id+'"><option value="pending_payment" '+(order.status==='pending_payment'?'selected':'')+'>A aguardar pagamento</option><option value="pending_quote" '+(order.status==='pending_quote'?'selected':'')+'>A aguardar orçamento</option><option value="processing" '+(order.status==='processing'?'selected':'')+'>Em processamento</option><option value="completed" '+(order.status==='completed'?'selected':'')+'>Concluído</option><option value="cancelled" '+(order.status==='cancelled'?'selected':'')+'>Cancelado</option></select></td>' +
+        '<td><select data-payment-status="'+order.id+'"><option value="unpaid" '+(order.payment_status==='unpaid'?'selected':'')+'>Não pago</option><option value="submitted" '+(order.payment_status==='submitted'?'selected':'')+'>Comprovativo enviado</option><option value="confirmed" '+(order.payment_status==='confirmed'?'selected':'')+'>Confirmado</option><option value="rejected" '+(order.payment_status==='rejected'?'selected':'')+'>Rejeitado</option></select></td></tr>';
+    }).join('')||'<tr><td colspan="7">Sem pedidos encontrados.</td></tr>';
 
-    list.querySelectorAll('[data-save-service]').forEach((button) => {
-      button.addEventListener('click', async () => {
-        const id = button.dataset.saveService;
-        const fields = [...list.querySelectorAll('[data-service="' + id + '"]')];
-        const patch = {};
-        fields.forEach((field) => {
-          if (field.dataset.field === 'unit_price') patch[field.dataset.field] = field.value === '' ? null : Number(field.value);
-          else if (field.dataset.field === 'is_active') patch[field.dataset.field] = field.value === 'true';
-          else patch[field.dataset.field] = field.value.trim();
-        });
-        patch.updated_at = new Date().toISOString();
-        const result = await db().from('services').update(patch).eq('id', id);
-        msg(result.error ? 'Não foi possível guardar o serviço.' : 'Serviço atualizado.', result.error ? 'error' : 'success');
+    body.querySelectorAll('[data-order-status]').forEach(node=>node.addEventListener('change',()=>updateOrder(node.dataset.orderStatus,{status:node.value})));
+    body.querySelectorAll('[data-payment-status]').forEach(node=>node.addEventListener('change',()=>updateOrder(node.dataset.paymentStatus,{payment_status:node.value})));
+  }
+
+  async function updateOrder(id,patch){
+    const result=await db().from('orders').update({...patch,updated_at:new Date().toISOString()}).eq('id',id);
+    if(result.error){msg('Não foi possível atualizar o pedido.','error');return;}
+    msg('Pedido atualizado.','success');
+    await Promise.all([loadOrders(),loadOverview()]);
+  }
+
+  async function loadServices(){
+    const result=await db().from('services').select('id,name,slug,category,description,image_url,features,unit_price,currency,is_active,sort_order,updated_at').order('sort_order',{ascending:true});
+    if(result.error){msg('Não foi possível carregar serviços.','error');return;}
+    cache.services=result.data||[];
+    fillServiceCategoryFilter();
+    renderServices();
+  }
+
+  function fillServiceCategoryFilter(){
+    const node=document.getElementById('services-category-filter');
+    if(!node)return;
+    const categories=[...new Set(cache.services.map(x=>x.category).filter(Boolean))].sort();
+    node.innerHTML='<option value="">Todas as categorias</option>'+categories.map(x=>'<option value="'+esc(x)+'">'+esc(x)+'</option>').join('');
+    node.value=filters.servicesCategory;
+  }
+
+  function renderServices(){
+    const list=document.getElementById('admin-services-list');
+    if(!list)return;
+    const data=filtered(cache.services,filters.servicesSearch,[x=>x.name,x=>x.slug,x=>x.category,x=>x.description,x=>x.image_url])
+      .filter(x=>!filters.servicesCategory||x.category===filters.servicesCategory)
+      .filter(x=>!filters.servicesActive||String(x.is_active)===filters.servicesActive);
+    list.innerHTML=data.map(serviceEditor).join('')||'<p>Sem serviços encontrados.</p>';
+    bindServiceEvents();
+  }
+
+  function serviceEditor(service){
+    const features=Array.isArray(service.features)?service.features.join('\n'):'';
+    return '<article class="cms-editor-card"><div class="editor-card-head"><div><span class="editor-kicker">'+esc(service.category||'Serviço')+'</span><h3>'+esc(service.name)+'</h3></div><span class="admin-chip '+(service.is_active?'chip-on':'chip-off')+'">'+(service.is_active?'Ativo':'Inativo')+'</span></div>' +
+      '<div class="field-two cms-field-grid"><div><label>Nome</label><input data-service="'+service.id+'" data-field="name" value="'+esc(service.name)+'"></div><div><label>Categoria</label><input data-service="'+service.id+'" data-field="category" value="'+esc(service.category||'')+'"></div><div><label>Slug</label><input data-service="'+service.id+'" data-field="slug" value="'+esc(service.slug||'')+'"></div><div><label>Preço (AOA)</label><input type="number" min="0" step="0.01" data-service="'+service.id+'" data-field="unit_price" value="'+(service.unit_price??'')+'"></div><div><label>Moeda</label><input data-service="'+service.id+'" data-field="currency" value="'+esc(service.currency||'AOA')+'"></div><div><label>Ordem</label><input type="number" step="1" data-service="'+service.id+'" data-field="sort_order" value="'+(service.sort_order??0)+'"></div></div>' +
+      '<div class="field-row"><label>Descrição</label><textarea data-service="'+service.id+'" data-field="description" rows="3">'+esc(service.description||'')+'</textarea></div>' +
+      '<div class="field-row"><label>Imagem (caminho ou URL)</label><input data-service="'+service.id+'" data-field="image_url" value="'+esc(service.image_url||'')+'"></div>' +
+      '<div class="field-row"><label>Características (uma por linha)</label><textarea data-service="'+service.id+'" data-field="features" rows="3">'+esc(features)+'</textarea></div>' +
+      '<div class="inline-action-row"><label class="checkbox-row"><input type="checkbox" data-service="'+service.id+'" data-field="is_active" '+(service.is_active?'checked':'')+'> Publicado no site</label><button class="btn btn-primary" type="button" data-save-service="'+service.id+'">Guardar serviço</button></div></article>';
+  }
+
+  function bindServiceEvents(){
+    const list=document.getElementById('admin-services-list');
+    list.querySelectorAll('[data-save-service]').forEach(button=>button.addEventListener('click',async()=>{
+      const id=button.dataset.saveService;
+      const patch={updated_at:new Date().toISOString()};
+      list.querySelectorAll('[data-service="'+id+'"]').forEach(field=>{
+        const name=field.dataset.field;
+        if(name==='features')patch[name]=field.value.split('\n').map(v=>v.trim()).filter(Boolean);
+        else if(name==='unit_price')patch[name]=field.value===''?null:Number(field.value);
+        else if(name==='sort_order')patch[name]=Number(field.value||0);
+        else if(name==='is_active')patch[name]=field.checked;
+        else patch[name]=field.value.trim();
       });
-    });
+      const result=await db().from('services').update(patch).eq('id',id);
+      if(result.error){msg('Não foi possível guardar o serviço.','error');return;}
+      msg('Serviço atualizado. O site será atualizado em tempo real.','success');
+      await loadServices();
+    }));
   }
 
-  async function loadPayments() {
-    const result = await db().from('payment_methods')
-      .select('id,code,name,description,account_details,instructions,is_active,sort_order')
-      .order('sort_order', { ascending: true });
+  async function addService(){
+    const result=await db().from('services').insert({name:'Novo serviço',slug:'novo-servico-'+Date.now(),category:'Nova categoria',description:'Descrição do serviço.',image_url:'',features:[],unit_price:null,currency:'AOA',is_active:false,sort_order:cache.services.length+1});
+    if(result.error){msg('Não foi possível adicionar o serviço.','error');return;}
+    msg('Serviço criado. Edite os campos e guarde.','success');
+    await loadServices();
+  }
 
-    if (result.error) {
-      msg('Não foi possível carregar métodos de pagamento.', 'error');
-      return;
-    }
+  async function loadMedia(){
+    const result=await db().from('site_media').select('id,media_type,title,category,description,image_url,whatsapp_message,is_active,sort_order,updated_at').order('media_type').order('sort_order');
+    if(result.error){msg('Não foi possível carregar as imagens.','error');return;}
+    cache.media=result.data||[];
+    renderMedia();
+  }
 
-    const list = document.getElementById('payment-methods-admin');
-    list.innerHTML = (result.data || []).map((method) =>
-      '<article class="admin-service-editor">' +
-      '<h3>' + esc(method.name) + '</h3>' +
-      '<div class="field-row"><label>Descrição</label><input data-payment="' + method.id + '" data-field="description" value="' + esc(method.description || '') + '"></div>' +
-      '<div class="field-row"><label>Dados para recebimento</label><textarea data-payment="' + method.id + '" data-field="account_details" rows="3">' + esc(method.account_details || '') + '</textarea></div>' +
-      '<div class="field-row"><label>Instruções ao cliente</label><textarea data-payment="' + method.id + '" data-field="instructions" rows="3">' + esc(method.instructions || '') + '</textarea></div>' +
-      '<div class="field-row"><label>Disponível</label><select data-payment="' + method.id + '" data-field="is_active"><option value="true" ' + (method.is_active ? 'selected' : '') + '>Sim</option><option value="false" ' + (!method.is_active ? 'selected' : '') + '>Não</option></select></div>' +
-      '<button class="btn btn-primary" type="button" data-save-payment="' + method.id + '">Guardar método</button>' +
-      '</article>'
-    ).join('');
+  function renderMedia(){
+    const list=document.getElementById('admin-media-list');
+    if(!list)return;
+    const data=filtered(cache.media,filters.mediaSearch,[x=>x.title,x=>x.category,x=>x.description,x=>x.image_url,x=>x.whatsapp_message])
+      .filter(x=>!filters.mediaType||x.media_type===filters.mediaType)
+      .filter(x=>!filters.mediaActive||String(x.is_active)===filters.mediaActive);
+    list.innerHTML=data.map(mediaEditor).join('')||'<p>Sem imagens encontradas.</p>';
+    bindMediaEvents();
+  }
 
-    list.querySelectorAll('[data-save-payment]').forEach((button) => {
-      button.addEventListener('click', async () => {
-        const id = button.dataset.savePayment;
-        const patch = {};
-        list.querySelectorAll('[data-payment="' + id + '"]').forEach((field) => {
-          patch[field.dataset.field] = field.dataset.field === 'is_active'
-            ? field.value === 'true'
-            : field.value.trim();
-        });
-        patch.updated_at = new Date().toISOString();
-        const result = await db().from('payment_methods').update(patch).eq('id', id);
-        msg(result.error ? 'Não foi possível guardar o método.' : 'Método atualizado.', result.error ? 'error' : 'success');
+  function mediaEditor(item){
+    return '<article class="media-editor-card"><div class="media-editor-preview">'+(item.image_url?'<img src="'+esc(encodeURI(item.image_url))+'" alt="'+esc(item.title||'Imagem')+'">':'<div class="media-placeholder">Sem imagem</div>')+'</div><div class="media-editor-form">' +
+      '<div class="editor-card-head"><div><span class="editor-kicker">'+esc(item.media_type)+'</span><h3>'+esc(item.title||'Imagem')+'</h3></div><span class="admin-chip '+(item.is_active?'chip-on':'chip-off')+'">'+(item.is_active?'Ativo':'Inativo')+'</span></div>' +
+      '<div class="field-two cms-field-grid"><div><label>Tipo</label><select data-media="'+item.id+'" data-field="media_type"><option value="hero" '+(item.media_type==='hero'?'selected':'')+'>Hero</option><option value="gallery" '+(item.media_type==='gallery'?'selected':'')+'>Galeria</option><option value="portfolio" '+(item.media_type==='portfolio'?'selected':'')+'>Portfólio</option></select></div><div><label>Categoria</label><input data-media="'+item.id+'" data-field="category" value="'+esc(item.category||'')+'"></div><div><label>Título</label><input data-media="'+item.id+'" data-field="title" value="'+esc(item.title||'')+'"></div><div><label>Ordem</label><input type="number" data-media="'+item.id+'" data-field="sort_order" value="'+(item.sort_order??0)+'"></div></div>' +
+      '<div class="field-row"><label>Imagem (caminho ou URL)</label><input data-media="'+item.id+'" data-field="image_url" value="'+esc(item.image_url||'')+'"></div><div class="field-row"><label>Descrição</label><textarea data-media="'+item.id+'" data-field="description" rows="2">'+esc(item.description||'')+'</textarea></div><div class="field-row"><label>Mensagem WhatsApp</label><textarea data-media="'+item.id+'" data-field="whatsapp_message" rows="2">'+esc(item.whatsapp_message||'')+'</textarea></div>' +
+      '<div class="inline-action-row"><label class="checkbox-row"><input type="checkbox" data-media="'+item.id+'" data-field="is_active" '+(item.is_active?'checked':'')+'> Publicado</label><div class="card-actions"><button class="btn btn-primary" type="button" data-save-media="'+item.id+'">Guardar</button><button class="btn btn-secondary" type="button" data-delete-media="'+item.id+'">Apagar</button></div></div></div></article>';
+  }
+
+  function bindMediaEvents(){
+    const list=document.getElementById('admin-media-list');
+    list.querySelectorAll('[data-save-media]').forEach(button=>button.addEventListener('click',async()=>{
+      const id=button.dataset.saveMedia;
+      const patch={updated_at:new Date().toISOString()};
+      list.querySelectorAll('[data-media="'+id+'"]').forEach(field=>{
+        const name=field.dataset.field;
+        if(name==='is_active')patch[name]=field.checked;
+        else if(name==='sort_order')patch[name]=Number(field.value||0);
+        else patch[name]=field.value.trim();
       });
-    });
+      const result=await db().from('site_media').update(patch).eq('id',id);
+      if(result.error){msg('Não foi possível guardar a imagem.','error');return;}
+      msg('Imagem atualizada. O site será atualizado em tempo real.','success');
+      await loadMedia();
+    }));
+    list.querySelectorAll('[data-delete-media]').forEach(button=>button.addEventListener('click',async()=>{
+      if(!window.confirm('Apagar esta imagem do site?'))return;
+      const result=await db().from('site_media').delete().eq('id',button.dataset.deleteMedia);
+      if(result.error){msg('Não foi possível apagar a imagem.','error');return;}
+      msg('Imagem removida.','success');
+      await loadMedia();
+    }));
   }
 
-  async function loadSettings() {
-    const result = await db().from('site_settings').select('key,value').order('key');
-    const list = document.getElementById('settings-admin');
-    if (result.error) {
-      msg('Não foi possível carregar definições.', 'error');
-      return;
-    }
-
-    list.innerHTML = (result.data || []).map((item) =>
-      '<div class="field-row"><label>' + esc(item.key) + '</label>' +
-      '<input data-setting="' + esc(item.key) + '" value="' + esc(item.value || '') + '">' +
-      '<button class="btn btn-secondary" type="button" data-save-setting="' + esc(item.key) + '">Guardar</button></div>'
-    ).join('');
-
-    list.querySelectorAll('[data-save-setting]').forEach((button) => {
-      button.addEventListener('click', async () => {
-        const key=button.dataset.saveSetting;
-        const input=list.querySelector('[data-setting="' + key.replace(/"/g,'&quot;') + '"]');
-        const value=input?.value ?? '';
-        const result=await db().from('site_settings').upsert({ key, value, updated_at:new Date().toISOString() });
-        msg(result.error ? 'Não foi possível guardar.' : 'Definição atualizada.', result.error ? 'error' : 'success');
-      });
-    });
+  async function addMedia(){
+    const result=await db().from('site_media').insert({media_type:'gallery',title:'Nova imagem',category:'',description:'',image_url:'',whatsapp_message:'',is_active:false,sort_order:cache.media.length+1});
+    if(result.error){msg('Não foi possível adicionar a imagem.','error');return;}
+    msg('Imagem criada. Preencha a imagem e publique.','success');
+    await loadMedia();
   }
 
-  async function loadContent() {
-    const result = await db().from('site_content').select('id,page,section,field,value').order('page').order('section').order('field');
+  async function loadContent(){
+    const result=await db().from('site_content').select('id,page,section,field,value,updated_at').order('page').order('section').order('field');
+    if(result.error){msg('Não foi possível carregar conteúdos.','error');return;}
+    cache.content=result.data||[];
+    fillContentFilters();
+    renderContent();
+  }
+
+  function fillContentFilters(){
+    const page=document.getElementById('content-page-filter');
+    const section=document.getElementById('content-section-filter');
+    if(page)page.innerHTML='<option value="">Todas as páginas</option>'+[...new Set(cache.content.map(x=>x.page))].sort().map(x=>'<option value="'+esc(x)+'">'+esc(x)+'</option>').join('');
+    if(section)section.innerHTML='<option value="">Todas as secções</option>'+[...new Set(cache.content.map(x=>x.section))].sort().map(x=>'<option value="'+esc(x)+'">'+esc(x)+'</option>').join('');
+    if(page)page.value=filters.contentPage;
+    if(section)section.value=filters.contentSection;
+  }
+
+  function renderContent(){
     const list=document.getElementById('content-admin');
-    if(result.error){ msg('Não foi possível carregar conteúdos.','error'); return; }
-    list.innerHTML=(result.data||[]).map(item =>
-      '<article class="admin-service-editor"><div class="field-row field-two">' +
-      '<div><label>Página</label><input value="' + esc(item.page) + '" data-content-id="' + item.id + '" data-field="page"></div>' +
-      '<div><label>Secção</label><input value="' + esc(item.section) + '" data-content-id="' + item.id + '" data-field="section"></div></div>' +
-      '<div class="field-row"><label>' + esc(item.field) + '</label><textarea data-content-id="' + item.id + '" data-field="value" rows="3">' + esc(item.value || '') + '</textarea></div>' +
-      '<button class="btn btn-primary" type="button" data-save-content="' + item.id + '">Guardar conteúdo</button></article>'
-    ).join('') || '<p>Sem conteúdos configurados.</p>';
-
-    list.querySelectorAll('[data-save-content]').forEach(button=>{
-      button.addEventListener('click',async()=>{
-        const id=button.dataset.saveContent;
-        const patch={};
-        list.querySelectorAll('[data-content-id="' + id + '"]').forEach(field=>{
-          patch[field.dataset.field]=field.value.trim();
-        });
-        patch.updated_at=new Date().toISOString();
-        patch.updated_by=(await db().auth.getUser()).data.user.id;
-        const result=await db().from('site_content').update(patch).eq('id',id);
-        msg(result.error?'Não foi possível guardar conteúdo.':'Conteúdo atualizado.',result.error?'error':'success');
-      });
-    });
+    if(!list)return;
+    const data=filtered(cache.content,filters.contentSearch,[x=>x.page,x=>x.section,x=>x.field,x=>x.value]).filter(x=>!filters.contentPage||x.page===filters.contentPage).filter(x=>!filters.contentSection||x.section===filters.contentSection);
+    list.innerHTML=data.map(item=>'<article class="cms-editor-card"><div class="editor-card-head"><div><span class="editor-kicker">'+esc(item.page)+' / '+esc(item.section)+'</span><h3>'+esc(item.field)+'</h3></div><small>Atualizado: '+fmtDate(item.updated_at)+'</small></div><div class="field-two cms-field-grid"><div><label>Página</label><input data-content="'+item.id+'" data-field="page" value="'+esc(item.page)+'"></div><div><label>Secção</label><input data-content="'+item.id+'" data-field="section" value="'+esc(item.section)+'"></div></div><div class="field-row"><label>Campo</label><input data-content="'+item.id+'" data-field="field" value="'+esc(item.field)+'"></div><div class="field-row"><label>Texto</label><textarea data-content="'+item.id+'" data-field="value" rows="4">'+esc(item.value||'')+'</textarea></div><div class="card-actions"><button class="btn btn-primary" type="button" data-save-content="'+item.id+'">Guardar conteúdo</button><button class="btn btn-secondary" type="button" data-delete-content="'+item.id+'">Apagar</button></div></article>').join('')||'<p>Sem conteúdos encontrados.</p>';
+    bindContentEvents();
   }
 
-  async function loadAdmins() {
-    const result = await db().rpc('list_admins');
-
-    const list = document.getElementById('admin-admins-list');
-    if (!list) return;
-
-    if (result.error) {
-      list.innerHTML = '<p>Não foi possível carregar os administradores.</p>';
-      msg('Não foi possível carregar administradores.', 'error');
-      return;
-    }
-
-    list.innerHTML = (result.data || []).map((admin) => {
-      const isCurrent = admin.user_id === window.currentAdminId;
-      return '<article class="admin-admin-card">' +
-        '<div>' +
-          '<strong>' + esc(admin.full_name || 'Administrador') + '</strong>' +
-          '<span>' + esc(admin.email || '') + '</span>' +
-          '<small>Administrador desde ' + new Date(admin.created_at).toLocaleDateString('pt-PT') + '</small>' +
-        '</div>' +
-        '<button class="btn btn-secondary" type="button" data-remove-admin="' + admin.user_id + '" ' + (isCurrent ? 'disabled' : '') + '>' +
-          (isCurrent ? 'Administrador atual' : 'Remover acesso') +
-        '</button>' +
-      '</article>';
-    }).join('') || '<p>Não existem administradores configurados.</p>';
-
-    list.querySelectorAll('[data-remove-admin]:not([disabled])').forEach((button) => {
-      button.addEventListener('click', async () => {
-        const adminCard = button.closest('.admin-admin-card');
-        const email = adminCard?.querySelector('span')?.textContent?.trim();
-        if (!email) return;
-
-        const confirmed = window.confirm('Remover o acesso de administrador de ' + email + '?');
-        if (!confirmed) return;
-
-        button.disabled = true;
-        const result = await db().rpc('set_admin_role_by_email', {
-          p_email: email,
-          p_make_admin: false
-        });
-
-        if (result.error) {
-          msg('Não foi possível remover o acesso de administrador.', 'error');
-          button.disabled = false;
-          return;
-        }
-
-        msg('Acesso de administrador removido.', 'success');
-        await Promise.all([loadAdmins(), loadClients()]);
-      });
-    });
+  function bindContentEvents(){
+    const list=document.getElementById('content-admin');
+    list.querySelectorAll('[data-save-content]').forEach(button=>button.addEventListener('click',async()=>{
+      const id=button.dataset.saveContent;
+      const patch={updated_at:new Date().toISOString(),updated_by:window.currentAdminId};
+      list.querySelectorAll('[data-content="'+id+'"]').forEach(field=>patch[field.dataset.field]=field.value.trim());
+      const result=await db().from('site_content').update(patch).eq('id',id);
+      if(result.error){msg('Não foi possível guardar o conteúdo.','error');return;}
+      msg('Conteúdo atualizado. O site será atualizado em tempo real.','success');
+      await loadContent();
+    }));
+    list.querySelectorAll('[data-delete-content]').forEach(button=>button.addEventListener('click',async()=>{
+      if(!window.confirm('Apagar este conteúdo?'))return;
+      const result=await db().from('site_content').delete().eq('id',button.dataset.deleteContent);
+      if(result.error){msg('Não foi possível apagar o conteúdo.','error');return;}
+      msg('Conteúdo removido.','success');
+      await loadContent();
+    }));
   }
 
-  async function addAdmin() {
-    const input = document.getElementById('new-admin-email');
-    const email = input?.value?.trim().toLowerCase();
-    if (!email) {
-      msg('Introduza o email do utilizador que pretende tornar administrador.', 'error');
-      input?.focus();
-      return;
-    }
-
-    const button = document.getElementById('add-admin-btn');
-    if (button) button.disabled = true;
-
-    const result = await db().rpc('set_admin_role_by_email', {
-      p_email: email,
-      p_make_admin: true
-    });
-
-    if (result.error) {
-      const raw = result.error.message || '';
-      const userNotFound = raw.includes('USER_NOT_FOUND');
-      msg(
-        userNotFound
-          ? 'Este email ainda não tem uma conta registada. Primeiro peça ao utilizador para criar a conta no site.'
-          : 'Não foi possível adicionar este administrador.',
-        'error'
-      );
-      if (button) button.disabled = false;
-      return;
-    }
-
-    input.value = '';
-    msg('Administrador adicionado com sucesso.', 'success');
-    if (button) button.disabled = false;
-    await Promise.all([loadAdmins(), loadClients()]);
+  async function addContent(){
+    const result=await db().from('site_content').insert({page:'home',section:'novo',field:'novo_campo_'+Date.now(),value:'Novo conteúdo',updated_at:new Date().toISOString(),updated_by:window.currentAdminId});
+    if(result.error){msg('Não foi possível adicionar conteúdo.','error');return;}
+    msg('Novo conteúdo criado.','success');
+    await loadContent();
   }
 
-  async function init() {
-    if (!db()) return;
-    const admin = await requireAdmin();
-    if (!admin) return;
+  async function loadPayments(){
+    const result=await db().from('payment_methods').select('id,code,name,description,account_details,instructions,is_active,sort_order,updated_at').order('sort_order');
+    if(result.error){msg('Não foi possível carregar métodos de pagamento.','error');return;}
+    cache.payments=result.data||[];
+    renderPayments();
+  }
 
-    const profile = await db().from('profiles').select('full_name').eq('id', admin.user.id).maybeSingle();
-    document.getElementById('admin-name').textContent = profile.data?.full_name || 'Administrador';
+  function renderPayments(){
+    const list=document.getElementById('payment-methods-admin');
+    if(!list)return;
+    const data=filtered(cache.payments,filters.paymentsSearch,[x=>x.code,x=>x.name,x=>x.description,x=>x.account_details,x=>x.instructions]).filter(x=>!filters.paymentsActive||String(x.is_active)===filters.paymentsActive);
+    list.innerHTML=data.map(item=>'<article class="cms-editor-card"><div class="editor-card-head"><div><span class="editor-kicker">'+esc(item.code)+'</span><h3>'+esc(item.name)+'</h3></div><span class="admin-chip '+(item.is_active?'chip-on':'chip-off')+'">'+(item.is_active?'Ativo':'Inativo')+'</span></div><div class="field-two cms-field-grid"><div><label>Nome</label><input data-payment="'+item.id+'" data-field="name" value="'+esc(item.name)+'"></div><div><label>Código</label><input data-payment="'+item.id+'" data-field="code" value="'+esc(item.code)+'"></div><div><label>Ordem</label><input type="number" data-payment="'+item.id+'" data-field="sort_order" value="'+(item.sort_order??0)+'"></div></div><div class="field-row"><label>Descrição</label><input data-payment="'+item.id+'" data-field="description" value="'+esc(item.description||'')+'"></div><div class="field-row"><label>Dados de recebimento</label><textarea data-payment="'+item.id+'" data-field="account_details" rows="3">'+esc(item.account_details||'')+'</textarea></div><div class="field-row"><label>Instruções</label><textarea data-payment="'+item.id+'" data-field="instructions" rows="3">'+esc(item.instructions||'')+'</textarea></div><div class="inline-action-row"><label class="checkbox-row"><input type="checkbox" data-payment="'+item.id+'" data-field="is_active" '+(item.is_active?'checked':'')+'> Disponível no checkout</label><button class="btn btn-primary" type="button" data-save-payment="'+item.id+'">Guardar método</button></div></article>').join('')||'<p>Sem métodos encontrados.</p>';
+    bindPaymentEvents();
+  }
 
-    await Promise.all([loadOverview(),loadClients(),loadOrders(),loadServices(),loadPayments(),loadSettings(),loadContent(),loadAdmins()]);
+  function bindPaymentEvents(){
+    const list=document.getElementById('payment-methods-admin');
+    list.querySelectorAll('[data-save-payment]').forEach(button=>button.addEventListener('click',async()=>{
+      const id=button.dataset.savePayment;
+      const patch={updated_at:new Date().toISOString()};
+      list.querySelectorAll('[data-payment="'+id+'"]').forEach(field=>{const name=field.dataset.field;if(name==='is_active')patch[name]=field.checked;else if(name==='sort_order')patch[name]=Number(field.value||0);else patch[name]=field.value.trim();});
+      const result=await db().from('payment_methods').update(patch).eq('id',id);
+      if(result.error){msg('Não foi possível guardar o método.','error');return;}
+      msg('Método atualizado.','success');
+      await loadPayments();
+    }));
+  }
 
-    document.querySelectorAll('.admin-tab').forEach((tab)=>{
-      tab.addEventListener('click',()=>{
-        document.querySelectorAll('.admin-section').forEach((section)=>section.classList.toggle('is-visible',section.dataset.adminPanel===tab.dataset.adminSection));
-        document.querySelectorAll('.admin-tab').forEach((item)=>item.classList.toggle('is-active',item===tab));
-      });
-    });
+  async function loadSettings(){
+    const result=await db().from('site_settings').select('key,value,updated_at').order('key');
+    if(result.error){msg('Não foi possível carregar definições.','error');return;}
+    cache.settings=result.data||[];
+    renderSettings();
+  }
 
-    document.querySelector('[data-logout]')?.addEventListener('click', async()=>{
-      await db().auth.signOut();
-      window.location.href='auth.html';
-    });
+  function renderSettings(){
+    const list=document.getElementById('settings-admin');
+    if(!list)return;
+    const data=filtered(cache.settings,filters.settingsSearch,[x=>x.key,x=>x.value]);
+    list.innerHTML=data.map(item=>'<article class="cms-setting-row"><div class="field-row"><label>'+esc(item.key)+'</label><input data-setting-admin="'+esc(item.key)+'" value="'+esc(item.value||'')"></div><div class="card-actions"><button class="btn btn-primary" type="button" data-save-setting="'+esc(item.key)+'">Guardar</button><button class="btn btn-secondary" type="button" data-delete-setting="'+esc(item.key)+'">Apagar</button></div></article>').join('')||'<p>Sem definições.</p>';
+    bindSettingEvents();
+  }
+
+  function bindSettingEvents(){
+    const list=document.getElementById('settings-admin');
+    list.querySelectorAll('[data-save-setting]').forEach(button=>button.addEventListener('click',async()=>{
+      const key=button.dataset.saveSetting;
+      const input=[...list.querySelectorAll('[data-setting-admin]')].find(node=>node.dataset.settingAdmin===key);
+      const value=input?.value?.trim()||'';
+      const result=await db().from('site_settings').upsert({key,value,updated_at:new Date().toISOString()});
+      if(result.error){msg('Não foi possível guardar a definição.','error');return;}
+      msg('Definição atualizada.','success');
+      await loadSettings();
+    }));
+    list.querySelectorAll('[data-delete-setting]').forEach(button=>button.addEventListener('click',async()=>{
+      if(!window.confirm('Apagar esta definição?'))return;
+      const result=await db().from('site_settings').delete().eq('key',button.dataset.deleteSetting);
+      if(result.error){msg('Não foi possível apagar a definição.','error');return;}
+      msg('Definição removida.','success');
+      await loadSettings();
+    }));
+  }
+
+  async function addSetting(){
+    const key='nova_definicao_'+Date.now();
+    const result=await db().from('site_settings').insert({key,value:'',updated_at:new Date().toISOString()});
+    if(result.error){msg('Não foi possível adicionar a definição.','error');return;}
+    msg('Definição criada. Edite e guarde.','success');
+    await loadSettings();
+  }
+
+  async function loadAdmins(){
+    const result=await db().rpc('list_admins');
+    const list=document.getElementById('admin-admins-list');
+    if(!list)return;
+    if(result.error){list.innerHTML='<p>Não foi possível carregar administradores.</p>';return;}
+    list.innerHTML=(result.data||[]).map(admin=>{
+      const current=admin.user_id===window.currentAdminId;
+      return '<article class="admin-admin-card"><div><strong>'+esc(admin.full_name||'Administrador')+'</strong><span>'+esc(admin.email||'')+'</span><small>Administrador desde '+fmtDate(admin.created_at)+'</small></div><button class="btn btn-secondary" type="button" data-remove-admin="'+admin.user_id+'" '+(current?'disabled':'')+'>'+(current?'Administrador atual':'Remover acesso')+'</button></article>';
+    }).join('')||'<p>Não existem administradores.</p>';
+    list.querySelectorAll('[data-remove-admin]:not([disabled])').forEach(button=>button.addEventListener('click',async()=>{
+      const email=button.closest('.admin-admin-card')?.querySelector('span')?.textContent?.trim();
+      if(!email||!window.confirm('Remover o acesso de administrador de '+email+'?'))return;
+      const result=await db().rpc('set_admin_role_by_email',{p_email:email,p_make_admin:false});
+      if(result.error){msg('Não foi possível remover o acesso.','error');return;}
+      msg('Acesso de administrador removido.','success');
+      await Promise.all([loadAdmins(),loadClients()]);
+    }));
+  }
+
+  async function addAdmin(){
+    const input=document.getElementById('new-admin-email');
+    const email=input?.value?.trim().toLowerCase();
+    if(!email){msg('Introduza o email do utilizador.','error');return;}
+    const button=document.getElementById('add-admin-btn'); if(button)button.disabled=true;
+    const result=await db().rpc('set_admin_role_by_email',{p_email:email,p_make_admin:true});
+    if(result.error){msg(result.error.message?.includes('USER_NOT_FOUND')?'O utilizador ainda não tem conta na plataforma.':'Não foi possível adicionar o administrador.','error');if(button)button.disabled=false;return;}
+    input.value=''; msg('Administrador adicionado.','success'); if(button)button.disabled=false;
+    await Promise.all([loadAdmins(),loadClients(),loadOverview()]);
+  }
+
+  function bindFilters(){
+    const add=(id,key,event,render)=>{
+      const node=document.getElementById(id);
+      if(!node)return;
+      node.addEventListener(event,()=>{filters[key]=node.value;render();});
+    };
+    add('overview-search','overviewSearch','input',renderOverview);
+    add('overview-status-filter','overviewStatus','change',renderOverview);
+    add('clients-search','clientsSearch','input',renderClients);
+    add('clients-role-filter','clientsRole','change',renderClients);
+    add('orders-search','ordersSearch','input',renderOrders);
+    add('orders-status-filter','ordersStatus','change',renderOrders);
+    add('orders-payment-filter','ordersPayment','change',renderOrders);
+    add('services-search','servicesSearch','input',renderServices);
+    add('services-category-filter','servicesCategory','change',renderServices);
+    add('services-active-filter','servicesActive','change',renderServices);
+    add('media-search','mediaSearch','input',renderMedia);
+    add('media-type-filter','mediaType','change',renderMedia);
+    add('media-active-filter','mediaActive','change',renderMedia);
+    add('content-search','contentSearch','input',renderContent);
+    add('content-page-filter','contentPage','change',renderContent);
+    add('content-section-filter','contentSection','change',renderContent);
+    add('payments-search','paymentsSearch','input',renderPayments);
+    add('payments-active-filter','paymentsActive','change',renderPayments);
+    add('settings-search','settingsSearch','input',renderSettings);
+  }
+
+  function bindTabs(){
+    document.querySelectorAll('.admin-tab').forEach(tab=>tab.addEventListener('click',()=>{
+      document.querySelectorAll('.admin-section').forEach(section=>section.classList.toggle('is-visible',section.dataset.adminPanel===tab.dataset.adminSection));
+      document.querySelectorAll('.admin-tab').forEach(item=>item.classList.toggle('is-active',item===tab));
+    }));
+  }
+
+  async function init(){
+    if(!db())return;
+    const session=await requireAdmin();
+    if(!session)return;
+    window.currentAdminId=session.user.id;
+
+    const profile=await db().from('profiles').select('full_name').eq('id',session.user.id).maybeSingle();
+    document.getElementById('admin-name').textContent=profile.data?.full_name||'Administrador';
+
+    await Promise.all([loadOverview(),loadClients(),loadOrders(),loadServices(),loadMedia(),loadContent(),loadPayments(),loadSettings(),loadAdmins()]);
+    bindFilters();
+    bindTabs();
+
+    document.getElementById('add-service-btn')?.addEventListener('click',addService);
+    document.getElementById('add-media-btn')?.addEventListener('click',addMedia);
+    document.getElementById('add-content-btn')?.addEventListener('click',addContent);
+    document.getElementById('add-setting-btn')?.addEventListener('click',addSetting);
+    document.getElementById('add-admin-btn')?.addEventListener('click',addAdmin);
+    document.querySelectorAll('[data-logout]').forEach(button=>button.addEventListener('click',async()=>{await db().auth.signOut();window.location.href='auth.html';}));
+
+    db().channel('mukwatela-admin-live')
+      .on('postgres_changes',{event:'*',schema:'public',table:'orders'},()=>{loadOrders();loadOverview();})
+      .on('postgres_changes',{event:'*',schema:'public',table:'profiles'},()=>{loadClients();loadOverview();})
+      .on('postgres_changes',{event:'*',schema:'public',table:'services'},loadServices)
+      .on('postgres_changes',{event:'*',schema:'public',table:'site_media'},loadMedia)
+      .on('postgres_changes',{event:'*',schema:'public',table:'site_content'},loadContent)
+      .on('postgres_changes',{event:'*',schema:'public',table:'site_settings'},loadSettings)
+      .on('postgres_changes',{event:'*',schema:'public',table:'payment_methods'},loadPayments)
+      .subscribe();
   }
 
   document.addEventListener('DOMContentLoaded',init);
