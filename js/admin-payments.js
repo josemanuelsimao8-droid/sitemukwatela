@@ -25,12 +25,24 @@
 
   async function openProof(path) {
     if (!path) return;
-    const result = await client().storage.from('payment-proofs').createSignedUrl(path, 600);
-    if (result.error) {
-      alert('Não foi possível abrir o comprovativo.');
-      return;
+
+    try {
+      const result = await client().storage.from('payment-proofs').createSignedUrl(path, 600);
+
+      if (result.error || !result.data?.signedUrl) {
+        console.error('createSignedUrl:', result.error);
+        alert(
+          'Não foi possível abrir o comprovativo.\n\n' +
+          (result.error?.message || 'O ficheiro não está acessível para esta sessão de administrador.')
+        );
+        return;
+      }
+
+      window.open(result.data.signedUrl, '_blank', 'noopener,noreferrer');
+    } catch (error) {
+      console.error('openProof:', error);
+      alert('Erro ao abrir o comprovativo.\n\n' + (error?.message || error));
     }
-    window.open(result.data.signedUrl, '_blank', 'noopener,noreferrer');
   }
 
   function render() {
