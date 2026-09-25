@@ -62,6 +62,15 @@
       deadline: document.getElementById('service-deadline')?.value.trim() || ''
     };
     const notes = document.getElementById('service-observations')?.value.trim() || null;
+    const deliveryMethod = document.getElementById('delivery-method')?.value || 'pickup';
+    const deliveryContact = document.getElementById('delivery-contact')?.value.trim() || null;
+    const deliveryAddress = document.getElementById('delivery-address')?.value.trim() || null;
+
+    if (deliveryMethod === 'delivery' && !deliveryAddress) {
+      message('Introduza a morada de entrega ou escolha levantamento na Mukwatela.', 'error');
+      return;
+    }
+
     const submit = form.querySelector('button[type="submit"]');
 
     submit.disabled = true;
@@ -72,7 +81,10 @@
       p_quantity: quantity,
       p_notes: notes,
       p_specifications: specifications,
-      p_payment_method: paymentMethod
+      p_payment_method: paymentMethod,
+      p_delivery_method: deliveryMethod,
+      p_delivery_address: deliveryAddress,
+      p_delivery_contact: deliveryContact
     });
 
     if (result.error) {
@@ -88,7 +100,9 @@
     sessionStorage.removeItem('mukwatela-selected-service-id');
     sessionStorage.removeItem('mukwatela-selected-service');
 
-    window.location.href = 'pagamento.html?order=' + encodeURIComponent(orderId);
+    window.location.href = service.unit_price === null
+      ? 'orcamentos.html'
+      : 'pagamento.html?order=' + encodeURIComponent(orderId);
   }
 
   document.addEventListener('DOMContentLoaded', () => {
