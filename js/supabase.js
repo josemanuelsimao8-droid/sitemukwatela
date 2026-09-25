@@ -9,6 +9,29 @@
 
   window.supabaseClient = window.supabase.createClient(
     SUPABASE_URL,
-    SUPABASE_PUBLISHABLE_KEY
+    SUPABASE_PUBLISHABLE_KEY,
+    {
+      auth: {
+        autoRefreshToken: true,
+        persistSession: true,
+        detectSessionInUrl: true,
+        flowType: 'implicit'
+      }
+    }
   );
+
+  // Captura eventos de recuperação imediatamente, antes de auth.js
+  // ser executado. Isto evita perder o evento PASSWORD_RECOVERY
+  // durante a inicialização automática do Supabase Auth.
+  window.mukwatelaAuthState = {
+    lastEvent: null,
+    recoverySession: null
+  };
+
+  window.supabaseClient.auth.onAuthStateChange((event, session) => {
+    window.mukwatelaAuthState.lastEvent = event;
+    if (event === 'PASSWORD_RECOVERY' && session) {
+      window.mukwatelaAuthState.recoverySession = session;
+    }
+  });
 })();
