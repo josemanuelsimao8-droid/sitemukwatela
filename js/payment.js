@@ -80,13 +80,20 @@
 
     const details = document.createElement('div');
     details.className = 'payment-summary-details';
-    const service = order.order_items?.[0]?.service_name || 'Serviço';
+    const items = order.order_items || [];
     const item = document.createElement('span');
-    item.innerHTML = '<small>Serviço</small><strong>' + service + '</strong>';
+    const names = items.map((entry) => entry.service_name).filter(Boolean);
+    item.innerHTML = '<small>Itens</small><strong>' + names.length + ' · ' + names.join(', ') + '</strong>';
     const method = document.createElement('span');
     method.innerHTML = '<small>Pagamento</small><strong>' + (paymentMethod?.name || order.payment_method || '—') + '</strong>';
     details.append(item, method);
     node.appendChild(details);
+
+    if (Number(order.delivery_fee || 0) > 0) {
+      const delivery = document.createElement('span');
+      delivery.innerHTML = '<small>Entrega</small><strong>' + money(order.delivery_fee, order.currency) + '</strong>';
+      details.appendChild(delivery);
+    }
   }
 
   function renderMethodPanel() {
@@ -328,6 +335,14 @@
       order = await loadOrder(orderId);
       if (!order) {
         showMessage('Pedido não encontrado.', 'error');
+        return;
+      }
+
+      if (order.status === 'cancelled') {
+        renderSummary();
+        setStatus('cancelled');
+        const root = document.getElementById('payment-method-panel');
+        if (root) root.innerHTML = '<div class="payment-unavailable-card"><span class="eyebrow">Pedido cancelado</span><h3>Pagamento indisponível</h3><p>Este pedido foi cancelado e já não pode receber comprovativo de pagamento.</p><a class="btn btn-secondary" href="compras.html">Voltar aos pedidos</a></div>';
         return;
       }
 
