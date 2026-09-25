@@ -6,7 +6,7 @@
 
   async function isAdmin(){
     const s=(await db().auth.getSession()).data?.session;if(!s)return false;
-    const r=await db().from('user_roles').select('role').eq('user_id',s.user.id).maybeSingle();
+    const r=await db().from('profiles').select('role').eq('id',s.user.id).maybeSingle();
     return r.data?.role==='admin';
   }
   function msg(text,type='info'){const n=document.getElementById('admin-message');if(!n)return;n.textContent=text;n.dataset.type=type;n.hidden=false;}
@@ -46,7 +46,7 @@
 
   async function loadZones(){
     const root=document.getElementById('admin-delivery-zones');if(!root)return;
-    const r=await db().from('delivery_zones').select('id,name,description,fee,is_active,sort_order,updated_at').order('sort_order').order('name');
+    const r=await db().from('delivery_zones').select('id,name,description,fee,is_active,sort_order,created_at').order('sort_order').order('name');
     if(r.error){msg('Não foi possível carregar zonas de entrega.','error');return;}
     const add='<article class="cms-editor-card"><div class="editor-card-head"><div><span class="editor-kicker">NOVA ZONA</span><h3>Adicionar zona de entrega</h3></div></div><div class="zone-row"><label>Nome<input id="new-zone-name" placeholder="Ex.: Zona 1"></label><label>Descrição<input id="new-zone-description" placeholder="Área ou condição"></label><label>Taxa (AOA)<input id="new-zone-fee" type="number" min="0" step="0.01" value="0"></label><label>Ordem<input id="new-zone-order" type="number" min="0" step="1" value="0"></label><button class="btn btn-primary" type="button" id="save-new-zone">Adicionar</button></div></article>';
     const cards=(r.data||[]).map(z=>'<article class="cms-editor-card"><div class="zone-row"><label>Nome<input data-zone="'+z.id+'" data-field="name" value="'+esc(z.name)+'"></label><label>Descrição<input data-zone="'+z.id+'" data-field="description" value="'+esc(z.description||'')+'"></label><label>Taxa (AOA)<input data-zone="'+z.id+'" data-field="fee" type="number" min="0" step="0.01" value="'+Number(z.fee||0)+'"></label><label>Ordem<input data-zone="'+z.id+'" data-field="sort_order" type="number" min="0" step="1" value="'+Number(z.sort_order||0)+'"></label><div><label>Ativa<input data-zone="'+z.id+'" data-field="is_active" type="checkbox" '+(z.is_active?'checked':'')+'></label><div class="card-actions"><button class="btn btn-primary btn-small" type="button" data-save-zone="'+z.id+'">Guardar</button><button class="btn btn-secondary btn-small" type="button" data-delete-zone="'+z.id+'">Apagar</button></div></div></div></article>').join('');
@@ -61,7 +61,7 @@
       const id=b.dataset.saveZone,patch={updated_at:new Date().toISOString()};
       root.querySelectorAll('[data-zone="'+id+'"]').forEach(f=>patch[f.dataset.field]=f.type==='checkbox'?f.checked:(f.dataset.field==='fee'?Number(f.value||0):f.dataset.field==='sort_order'?Math.trunc(Number(f.value||0)):f.value.trim()));
       if(!patch.name||!Number.isFinite(patch.fee)||patch.fee<0){msg('Nome e taxa são obrigatórios.','error');return;}
-      const x=await db().from('delivery_zones').update(patch).eq('id',id);if(x.error){msg('Não foi possível guardar a zona.','error');return;}msg('Zona atualizada.','success');loadZones();
+      delete patch.updated_at; const x=await db().from('delivery_zones').update(patch).eq('id',id);if(x.error){msg('Não foi possível guardar a zona.','error');return;}msg('Zona atualizada.','success');loadZones();
     }));
     root.querySelectorAll('[data-delete-zone]').forEach(b=>b.addEventListener('click',async()=>{
       if(!confirm('Apagar esta zona de entrega?'))return;
