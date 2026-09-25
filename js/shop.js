@@ -377,6 +377,23 @@
     });
   }
 
+  let notificationChannel = null;
+
+  function subscribeCustomerNotifications(userId) {
+    if (!userId || notificationChannel) return;
+    notificationChannel = client().channel('customer-notifications-' + userId)
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'notifications',
+        filter: 'user_id=eq.' + userId
+      }, async () => {
+        if (document.getElementById('sum-orders')) await loadDashboard();
+        if (document.getElementById('all-notifications')) await loadNotifications();
+      })
+      .subscribe();
+  }
+
   async function loadDashboard() {
     if (!document.getElementById('sum-orders')) return;
     if (!await requireCustomer()) return;
@@ -393,6 +410,7 @@
 
     const orders = ordersResult.data || [];
     const notes = notesResult.data || [];
+    subscribeCustomerNotifications(sessionStorage.getItem('mukwatela-customer-id') || '');
     const serviceCount = orders.reduce((sum, order) =>
       sum + (order.order_items || []).reduce((sub, item) => sub + Number(item.quantity || 0), 0), 0
     );
@@ -480,6 +498,12 @@
 
   document.addEventListener('DOMContentLoaded', async () => {
     if (!client()) return;
+    const session = await getSession();
+    if (session) {
+      sessionStorage.setItem('mukwatela-customer-id', session.user.id);
+      subscribeCustomerNotifications(session.user.id);
+    }
+
     await Promise.all([
       initServices(),
       initCheckout(),
