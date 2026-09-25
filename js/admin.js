@@ -80,7 +80,7 @@
     const body=document.getElementById('admin-clients-table');
     if(!body)return;
     const data=filtered(cache.clients,filters.clientsSearch,[x=>x.full_name,x=>x.phone,x=>x.company,x=>x.role]).filter(x=>!filters.clientsRole||x.role===filters.clientsRole);
-    body.innerHTML=data.map(client=>'<tr><td>'+esc(client.full_name)+'</td><td>'+esc(client.company||'—')+'</td><td>'+esc(client.phone||'—')+'</td><td>'+esc(client.role)+'</td><td>'+fmtDate(client.created_at)+'</td></tr>').join('')||'<tr><td colspan="5">Sem resultados.</td></tr>';
+    body.innerHTML=data.map(client=>'<tr><td>'+esc(client.full_name)+'</td><td>'+esc(client.company||'—')+'</td><td>'+esc(client.phone||'—')+'</td><td>'+esc(client.role)+'</td><td>'+fmtDate(client.created_at)+'</td><td><a class="link-button" href="admin-cliente.html?user='+encodeURIComponent(client.id)+'">Abrir</a></td></tr>').join('')||'<tr><td colspan="6">Sem resultados.</td></tr>';
   }
 
   async function loadOrders(){
