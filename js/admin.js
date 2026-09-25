@@ -105,7 +105,7 @@
         '<td><select data-order-status="'+order.id+'"><option value="pending_payment" '+(order.status==='pending_payment'?'selected':'')+'>A aguardar pagamento</option><option value="pending_quote" '+(order.status==='pending_quote'?'selected':'')+'>A aguardar orçamento</option><option value="processing" '+(order.status==='processing'?'selected':'')+'>Em processamento</option><option value="completed" '+(order.status==='completed'?'selected':'')+'>Concluído</option><option value="cancelled" '+(order.status==='cancelled'?'selected':'')+'>Cancelado</option></select></td>' +
         '<td><select data-payment-status="'+order.id+'" data-payment-id="'+paymentId+'" '+(paymentId?'':'disabled title="Sem pagamento associado"')+'><option value="unpaid" '+(order.payment_status==='unpaid'?'selected':'')+'>Não pago</option><option value="submitted" '+(order.payment_status==='submitted'?'selected':'')+'>Comprovativo enviado</option><option value="confirmed" '+(order.payment_status==='confirmed'?'selected':'')+'>Confirmado</option><option value="rejected" '+(order.payment_status==='rejected'?'selected':'')+'>Rejeitado</option></select></td>' +
         '<td><a class="link-button" href="admin-pedido.html?order='+encodeURIComponent(order.id)+'">Abrir</a></td></tr>';
-    }).join('')||'<tr><td colspan="7">Sem pedidos encontrados.</td></tr>';
+    }).join('')||'<tr><td colspan="8">Sem pedidos encontrados.</td></tr>';
 
     body.querySelectorAll('[data-order-status]').forEach(node=>node.addEventListener('change',()=>updateOrderStatus(node.dataset.orderStatus,node.value)));
     body.querySelectorAll('[data-payment-status]').forEach(node=>node.addEventListener('change',()=>updateOrderPayment(node.dataset.paymentId,node.value)));
