@@ -42,31 +42,31 @@
             <div class="field-row field-two">
               <div>
                 <label for="register-name">Nome completo</label>
-                <input id="register-name" name="name" type="text" required />
+                <input id="register-name" name="name" type="text" autocomplete="name" maxlength="120" required />
               </div>
               <div>
                 <label for="register-company">Nome da empresa (opcional)</label>
-                <input id="register-company" name="company" type="text" />
+                <input id="register-company" name="company" type="text" autocomplete="organization" maxlength="160" />
               </div>
             </div>
             <div class="field-row field-two">
               <div>
                 <label for="register-email">Email</label>
-                <input id="register-email" name="email" type="email" required />
+                <input id="register-email" name="email" type="email" inputmode="email" autocomplete="email" maxlength="254" required />
               </div>
               <div>
                 <label for="register-phone">Telefone</label>
-                <input id="register-phone" name="phone" type="tel" required />
+                <input id="register-phone" name="phone" type="tel" inputmode="tel" autocomplete="tel" maxlength="30" required />
               </div>
             </div>
             <div class="field-row field-two">
               <div>
                 <label for="register-password">Palavra-passe</label>
-                <input id="register-password" name="password" type="password" required />
+                <input id="register-password" name="password" type="password" autocomplete="new-password" minlength="6" maxlength="128" required />
               </div>
               <div>
                 <label for="register-confirm-password">Confirmar palavra-passe</label>
-                <input id="register-confirm-password" name="confirmPassword" type="password" required />
+                <input id="register-confirm-password" name="confirmPassword" type="password" autocomplete="new-password" minlength="6" maxlength="128" required />
               </div>
             </div>
             <label class="checkbox-row" for="accept-terms">
