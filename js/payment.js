@@ -284,15 +284,71 @@
     return result.data;
   }
 
-  async function loadMethod() {
+  async function loadMethods() {
     const result = await client().from('payment_methods')
-      .select('id,code,name,description,account_details,instructions,is_active')
-      .eq('code', order.payment_method)
+      .select('id,code,name,description,account_details,instructions,is_active,sort_order')
       .eq('is_active', true)
-      .maybeSingle();
-
+      .order('sort_order', { ascending: true });
     if (result.error) throw result.error;
-    return result.data;
+    return result.data || [];
+  }
+
+  async function choosePaymentMethod(code) {
+    const result = await client().rpc('customer_set_payment_method', {
+      p_order_id: order.id,
+      p_payment_method: code
+    });
+    if (result.error) throw result.error;
+    payment = result.data;
+    order.payment_method = code;
+    paymentMethod = (await loadMethods()).find(x => x.code === code) || null;
+    renderSummary();
+    renderMethodPanel();
+    setStatus(payment.status);
+    subscribeRealtime();
+  }
+
+  function renderMethodChooser(methods) {
+    const root = document.getElementById('payment-method-panel');
+    if (!root) return;
+    root.innerHTML = '';
+    const shell = document.createElement('div');
+    shell.className = 'payment-method-card';
+    const title = document.createElement('h2');
+    title.textContent = 'Escolha a forma de pagamento';
+    const copy = document.createElement('p');
+    copy.textContent = 'Selecione um método disponível para ver os dados de pagamento e enviar o comprovativo.';
+    shell.append(title, copy);
+    const list = document.createElement('div');
+    list.className = 'payment-method-list';
+    methods.forEach((method, index) => {
+      const label = document.createElement('label');
+      label.className = 'payment-method-option';
+      const input = document.createElement('input');
+      input.type = 'radio';
+      input.name = 'payment-method-after-quote';
+      input.value = method.code;
+      input.checked = index === 0;
+      const span = document.createElement('span');
+      const strong = document.createElement('strong');
+      strong.textContent = method.name;
+      const small = document.createElement('small');
+      small.textContent = method.description || '';
+      span.append(strong, small);
+      label.append(input, span);
+      input.addEventListener('change', async () => {
+        try {
+          await choosePaymentMethod(input.value);
+          showMessage('Método de pagamento selecionado.', 'success');
+        } catch (error) {
+          console.error(error);
+          showMessage('Não foi possível selecionar este método de pagamento.', 'error');
+        }
+      });
+      list.appendChild(label);
+    });
+    shell.appendChild(list);
+    root.appendChild(shell);
   }
 
   function subscribeRealtime() {
@@ -364,7 +420,17 @@
           payment = result.data;
         }
 
-        paymentMethod = await loadMethod();
+        if (order.payment_method) {
+          paymentMethod = (await loadMethods()).find(x => x.code === order.payment_method) || null;
+        } else {
+          const methods = await loadMethods();
+          if (!methods.length) {
+            renderMethodPanel();
+            return;
+          }
+          renderMethodChooser(methods);
+          return;
+        }
         renderSummary();
         renderMethodPanel();
         setStatus(payment.status);
