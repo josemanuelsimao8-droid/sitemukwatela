@@ -2,9 +2,12 @@
   const client = () => window.supabaseClient;
 
   async function getSession() {
-    const result = await client().auth.getSession();
-    if (result.error) console.error(result.error);
-    return result.data?.session || null;
+    const result = await client().auth.getUser();
+    if (result.error) {
+      console.error('Supabase auth:', result.error);
+      return null;
+    }
+    return result.data?.user ? { user: result.data.user } : null;
   }
 
   async function getAppRole(userId) {
@@ -20,13 +23,7 @@
       return roleResult.data.role;
     }
 
-    const profileResult = await client()
-      .from('profiles')
-      .select('role')
-      .eq('id', userId)
-      .maybeSingle();
-
-    return profileResult.data?.role || 'customer';
+    return 'customer';
   }
 
   async function requireCustomer() {
@@ -137,11 +134,11 @@
           : '<button class="btn btn-primary" type="button" data-add-cart="' + service.id + '">Adicionar ao carrinho</button>';
         return '<article class="service-catalog-card">' +
           '<a class="service-catalog-media" href="produto.html?id=' + encodeURIComponent(service.id) + '" aria-label="Ver ' + service.name + '">' +
-            (service.image_url ? '<img src="' + encodeURI(service.image_url) + '" alt="' + service.name + '" loading="lazy">' : '') +
+            (service.image_url ? '<img src="' + esc(service.image_url) + '" alt="' + esc(service.name) + '" loading="lazy">' : '') +
           '</a>' +
           '<div class="service-catalog-body">' +
-            '<span class="eyebrow">' + (service.category || 'Serviço') + '</span>' +
-            '<h2>' + service.name + '</h2><p>' + (service.description || '') + '</p>' +
+            '<span class="eyebrow">' + esc(service.category || 'Serviço') + '</span>' +
+            '<h2>' + esc(service.name) + '</h2><p>' + esc(service.description || '') + '</p>' +
             '<div class="service-feature-list">' + features + '</div>' +
             '<div class="service-catalog-footer"><div><strong>' + moneyLocal(service.unit_price, service.currency) + '</strong>' +
               (service.unit_price != null ? '<small>/ ' + (service.unit_label || 'unidade') + '</small>' : '') + stock +
@@ -150,11 +147,14 @@
           '</div></article>';
       }).join('');
 
-      list.querySelectorAll('[data-add-cart]').forEach((button) => button.addEventListener('click', () => {
+      list.querySelectorAll('[data-add-cart]').forEach((button) => button.addEventListener('click', async () => {
         const service = services.find((x) => x.id === button.dataset.addCart);
         if (!service || !window.MukwatelaCart) return;
-        window.MukwatelaCart.add(service, 1, {});
-        showMessage('Serviço adicionado ao carrinho.', 'success');
+
+        button.disabled = true;
+        const added = await window.MukwatelaCart.add(service, 1, {});
+        if (added) showMessage('Serviço adicionado ao carrinho.', 'success');
+        button.disabled = false;
       }));
     }
 
