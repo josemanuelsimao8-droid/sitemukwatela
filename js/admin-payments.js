@@ -80,8 +80,8 @@
       return '<article class="payment-admin-row">' +
         '<div class="payment-admin-main">' +
           '<div><span class="payment-admin-order">' + (item.order?.order_number || 'Pedido') + '</span><strong>' + (item.order?.customer_name || 'Cliente') + '</strong><small>' + date + '</small></div>' +
-          '<div><span class="payment-admin-method">' + (item.payment_method || '—') + '</span><small>' + money(item.amount, item.currency) + '</small></div>' +
-          '<div><span class="' + statusClass(item.status) + '">' + (labels[item.status] || item.status) + '</span><small>' + (item.provider_transaction_id || item.reference || 'Sem referência') + '</small></div>' +
+          '<div><span class="payment-admin-method">' + (item.provider || '—') + '</span><small>' + money(item.amount, 'AOA') + '</small></div>' +
+          '<div><span class="' + statusClass(item.status) + '">' + (labels[item.status] || item.status) + '</span><small>' + (item.transaction_reference || 'Sem referência') + '</small></div>' +
         '</div>' +
         '<div class="payment-admin-actions">' +
           proof +
@@ -141,7 +141,7 @@
     if (!section) return;
 
     const result = await client().from('payments')
-      .select('id,order_id,customer_id,payment_method,provider,amount,currency,status,customer_mobile,provider_transaction_id,reference,proof_path,customer_note,created_at,updated_at,paid_at')
+      .select('id,order_id,user_id,provider,amount,status,proof_path,customer_note,transaction_reference,created_at')
       .order('created_at', { ascending: false })
       .limit(200);
 
@@ -174,7 +174,7 @@
       ...item,
       order: {
         order_number: orderMap[item.order_id]?.order_number,
-        customer_name: profileMap[item.customer_id]?.full_name
+        customer_name: profileMap[item.user_id]?.full_name
       }
     }));
 
