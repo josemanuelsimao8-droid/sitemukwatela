@@ -460,6 +460,10 @@
       '<div class="summary-row"><span>Estado</span><strong>' + statusLabel(order.status) + '</strong></div>';
   }
 
+  window.addEventListener('cms:services-updated', () => {
+    if (document.getElementById('services-list')) initServices();
+  });
+
   document.addEventListener('DOMContentLoaded', async () => {
     if (!client()) return;
     await Promise.all([
