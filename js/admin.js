@@ -351,7 +351,7 @@
     const list=document.getElementById('settings-admin');
     if(!list)return;
     const data=filtered(cache.settings,filters.settingsSearch,[x=>x.key,x=>x.value]);
-    list.innerHTML=data.map(item=>'<article class="cms-setting-row"><div class="field-row"><label>'+esc(item.key)+'</label><input data-setting-admin="'+esc(item.key)+'" value="'+esc(item.value||'')"></div><div class="card-actions"><button class="btn btn-primary" type="button" data-save-setting="'+esc(item.key)+'">Guardar</button><button class="btn btn-secondary" type="button" data-delete-setting="'+esc(item.key)+'">Apagar</button></div></article>').join('')||'<p>Sem definições.</p>';
+    list.innerHTML=data.map(item=>'<article class="cms-setting-row"><div class="field-row"><label>'+esc(item.key)+'</label><input data-setting-admin="'+esc(item.key)+'" value="'+esc(item.value||'')+'"></div><div class="card-actions"><button class="btn btn-primary" type="button" data-save-setting="'+esc(item.key)+'">Guardar</button><button class="btn btn-secondary" type="button" data-delete-setting="'+esc(item.key)+'">Apagar</button></div></article>').join('')||'<p>Sem definições.</p>';
     bindSettingEvents();
   }
 
