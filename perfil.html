@@ -42,26 +42,26 @@
             <div class="field-row field-two">
               <div>
                 <label for="profile-name">Nome</label>
-                <input id="profile-name" name="name" type="text" />
+                <input id="profile-name" name="name" type="text" autocomplete="name" maxlength="120" required />
               </div>
               <div>
                 <label for="profile-company">Empresa</label>
-                <input id="profile-company" name="company" type="text" />
+                <input id="profile-company" name="company" type="text" autocomplete="organization" maxlength="160" />
               </div>
             </div>
             <div class="field-row field-two">
               <div>
                 <label for="profile-email">Email</label>
-                <input id="profile-email" name="email" type="email" />
+                <input id="profile-email" name="email" type="email" autocomplete="email" maxlength="254" readonly />
               </div>
               <div>
                 <label for="profile-phone">Telefone</label>
-                <input id="profile-phone" name="phone" type="tel" />
+                <input id="profile-phone" name="phone" type="tel" inputmode="tel" autocomplete="tel" maxlength="30" />
               </div>
             </div>
             <div class="field-row">
               <label for="profile-address">Morada</label>
-              <input id="profile-address" name="address" type="text" />
+              <input id="profile-address" name="address" type="text" autocomplete="street-address" maxlength="300" />
             </div>
             <div class="inline-action-row">
               <button class="btn btn-secondary" type="button">Alterar palavra-passe</button>
