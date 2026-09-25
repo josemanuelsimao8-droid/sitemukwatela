@@ -120,14 +120,39 @@
 
   async function updateOrderPayment(paymentId,status){
     if(!paymentId){msg('Este pedido ainda não tem um registo de pagamento.','error');return;}
+
+    const mappedStatus = status==='confirmed'
+      ? 'paid'
+      : status==='rejected'
+        ? 'rejected'
+        : status==='submitted'
+          ? 'awaiting_confirmation'
+          : status==='unpaid'
+            ? 'pending'
+            : 'processing';
+
     const result=await db().rpc('admin_set_payment_status',{
       p_payment_id:paymentId,
-      p_status:status==='confirmed'?'paid':status==='rejected'?'rejected':status==='submitted'?'awaiting_confirmation':status==='unpaid'?'pending':'processing',
+      p_status:mappedStatus,
       p_note:null
     });
-    if(result.error){msg('Não foi possível atualizar o pagamento.','error');return;}
-    msg('Pagamento atualizado. Documentos e notificações foram sincronizados.','success');
-    await Promise.all([loadOrders(),loadOverview()]);
+
+    if(result.error){
+      console.error('admin_set_payment_status:',result.error);
+      msg('Não foi possível atualizar o pagamento: '+(result.error.message||result.error.details||'erro desconhecido'),'error');
+      return;
+    }
+
+    msg(
+      mappedStatus==='paid'
+        ? 'Pagamento confirmado com sucesso.'
+        : mappedStatus==='rejected'
+          ? 'Pagamento rejeitado.'
+          : 'Pagamento atualizado com sucesso.',
+      'success'
+    );
+
+    await Promise.all([loadOrders(),loadOverview(),loadPayments()]);
   }
 
   async function updateOrder(id,patch){
