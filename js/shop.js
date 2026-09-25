@@ -78,10 +78,11 @@
     const list = document.getElementById('services-list');
     if (!list) return;
 
-    const result = await client().from('services')
-      .select('id,name,slug,category,description,image_url,features,unit_price,currency,is_active,sort_order')
-      .eq('is_active', true)
-      .order('sort_order', { ascending: true });
+    let query = client().from('services')
+      .select('id,name,slug,category,description,image_url,features,unit_price,currency,is_active,sort_order,item_type,sku,unit_label,stock_quantity,is_featured')
+      .eq('is_active', true);
+    if (document.body.dataset.page === 'services') query = query.eq('item_type', 'service');
+    const result = await query.order('sort_order', { ascending: true });
 
     if (result.error) {
       console.error(result.error);
