@@ -52,11 +52,11 @@
           <form id="login-form" class="auth-form">
             <div class="field-row">
               <label for="login-email">Email</label>
-              <input id="login-email" name="email" type="email" placeholder="cliente@demo.com" required />
+              <input id="login-email" name="email" type="email" inputmode="email" autocomplete="email" maxlength="254" placeholder="cliente@demo.com" required />
             </div>
             <div class="field-row">
               <label for="login-password">Palavra-passe</label>
-              <input id="login-password" name="password" type="password" placeholder="••••••" required />
+              <input id="login-password" name="password" type="password" autocomplete="current-password" minlength="6" maxlength="128" placeholder="••••••" required />
             </div>
             <button type="submit" class="btn btn-primary btn-block">Entrar</button>
             <div id="auth-message" class="auth-message" hidden aria-live="polite"></div>
