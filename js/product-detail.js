@@ -18,13 +18,17 @@
     root.innerHTML='<div class="product-detail-media">'+(item.image_url?'<img src="'+encodeURI(item.image_url)+'" alt="'+esc(item.name)+'">':'')+'</div><div class="product-detail-copy"><span class="eyebrow">'+esc(mat?'Material':item.category||'Serviço')+'</span><h1>'+esc(item.name)+'</h1><p>'+esc(item.description||'')+'</p><div class="detail-feature-list">'+features+'</div><div class="product-detail-price">'+esc(money(item.unit_price,item.currency))+(item.unit_price!=null?' / '+esc(item.unit_label||'unidade'):'')+'</div><small class="catalog-stock">'+esc(stock)+'</small><div class="product-specs"><label>Quantidade<input id="pd-qty" type="number" min="1" step="1" value="1" '+(item.stock_quantity!=null?'max="'+Number(item.stock_quantity)+'"':'')+'></label></div>'+specs+'<div class="product-actions"><button class="btn btn-primary" id="pd-add" type="button">Adicionar ao carrinho</button><a class="btn btn-secondary" href="carrinho.html">Ver carrinho</a></div><p class="cart-note">Pode reunir vários serviços e materiais num só pedido. O stock volta a ser validado no checkout.</p></div>';
     document.getElementById('pd-add').addEventListener('click',add);
   }
-  function add(){
+  async function add(){
+    const user = await cart().requireAuth();
+    if(!user) return;
+
     let q=Math.max(1,Math.trunc(Number(document.getElementById('pd-qty')?.value)||1));
     if(item.stock_quantity!=null)q=Math.min(q,Number(item.stock_quantity));
     if(item.stock_quantity!=null&&Number(item.stock_quantity)<1){msg('Este material está sem stock.','error');return;}
     let specifications={};
     if(item.item_type!=='material')specifications={format:document.getElementById('pd-format')?.value||'',material:document.getElementById('pd-material')?.value.trim()||'',dimensions:document.getElementById('pd-dimensions')?.value.trim()||'',deadline:document.getElementById('pd-deadline')?.value.trim()||''};
-    cart().add(item,q,specifications);
+    const added = await cart().add(item,q,specifications);
+    if(!added) return;
     const toast=document.getElementById('cart-toast');if(toast){toast.textContent='Item adicionado ao carrinho.';toast.hidden=false;setTimeout(()=>toast.hidden=true,2200);}
   }
   document.addEventListener('DOMContentLoaded',init);
