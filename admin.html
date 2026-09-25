@@ -28,6 +28,7 @@
         <button class="nav-link admin-tab" type="button" data-admin-section="quotes">Orçamentos</button>
         <button class="nav-link admin-tab" type="button" data-admin-section="documents">Documentos</button>
         <button class="nav-link admin-tab" type="button" data-admin-section="delivery">Entregas</button>
+        <button class="nav-link admin-tab" type="button" data-admin-section="stock">Stock / Inventário</button>
         <button class="nav-link admin-tab" type="button" data-admin-section="reports">Relatórios</button>
         <button class="nav-link admin-tab" type="button" data-admin-section="admins">Administradores</button>
         <button class="nav-link admin-tab" type="button" data-admin-section="settings">Definições</button>
@@ -134,6 +135,21 @@
         </div>
       </section>
 
+
+      <section class="admin-section" data-admin-panel="stock">
+        <div class="panel-card">
+          <div class="section-header-row">
+            <div><h2>Stock / Inventário</h2><p class="admin-section-note">Consulte stock por material, veja alertas e registe entradas, saídas ou ajustes.</p></div>
+          </div>
+          <div id="admin-stock-alerts" class="stock-alert-box" hidden></div>
+          <div id="admin-stock-list" class="admin-services-list"></div>
+          <div class="admin-subsection">
+            <h3>Histórico de movimentos</h3>
+            <div class="table-responsive"><table class="inventory-table"><thead><tr><th>Data</th><th>Material</th><th>Movimento</th><th>Quantidade</th><th>Stock antes</th><th>Stock depois</th><th>Nota</th></tr></thead><tbody id="admin-inventory-list"></tbody></table></div>
+          </div>
+        </div>
+      </section>
+
       <section class="admin-section" data-admin-panel="reports">
         <div class="panel-card">
           <div class="section-header-row"><div><h2>Relatórios</h2><p class="admin-section-note">Indicadores operacionais com filtros por período.</p></div><div class="admin-toolbar"><select id="report-period" class="admin-filter-select"><option value="7">Últimos 7 dias</option><option value="30" selected>Últimos 30 dias</option><option value="90">Últimos 90 dias</option><option value="365">Últimos 12 meses</option></select></div></div>
@@ -165,5 +181,6 @@
   <script src="./js/admin.js"></script>
   <script src="./js/admin-payments.js"></script>
   <script src="./js/admin-operations.js"></script>
+  <script src="./js/admin-advanced.js"></script>
 </body>
 </html>
