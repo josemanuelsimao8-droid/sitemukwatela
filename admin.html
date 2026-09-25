@@ -25,6 +25,10 @@
         <button class="nav-link admin-tab" type="button" data-admin-section="media">Site / Imagens</button>
         <button class="nav-link admin-tab" type="button" data-admin-section="content">Conteúdos</button>
         <button class="nav-link admin-tab" type="button" data-admin-section="payments">Pagamentos</button>
+        <button class="nav-link admin-tab" type="button" data-admin-section="quotes">Orçamentos</button>
+        <button class="nav-link admin-tab" type="button" data-admin-section="documents">Documentos</button>
+        <button class="nav-link admin-tab" type="button" data-admin-section="delivery">Entregas</button>
+        <button class="nav-link admin-tab" type="button" data-admin-section="reports">Relatórios</button>
         <button class="nav-link admin-tab" type="button" data-admin-section="admins">Administradores</button>
         <button class="nav-link admin-tab" type="button" data-admin-section="settings">Definições</button>
         <button class="nav-link nav-logout" type="button" data-logout>Sair</button>
@@ -109,6 +113,35 @@
         </div>
       </section>
 
+      <section class="admin-section" data-admin-panel="quotes">
+        <div class="panel-card">
+          <div class="section-header-row"><div><h2>Orçamentos</h2><p class="admin-section-note">Defina o valor, validade e estado de cada pedido que depende de orçamento.</p></div><div class="admin-toolbar"><input id="admin-quotes-search" class="admin-filter-input" type="search" placeholder="Pedido, cliente ou serviço..."><select id="admin-quotes-status" class="admin-filter-select"><option value="">Todos</option><option value="draft">Em análise</option><option value="sent">Enviado</option><option value="accepted">Aceite</option><option value="rejected">Rejeitado</option><option value="expired">Expirado</option></select></div></div>
+          <div id="admin-quotes-list" class="operations-admin-list"></div>
+        </div>
+      </section>
+
+      <section class="admin-section" data-admin-panel="documents">
+        <div class="panel-card">
+          <div class="section-header-row"><div><h2>Documentos emitidos</h2><p class="admin-section-note">Proformas e facturas associadas aos pedidos.</p></div><div class="admin-toolbar"><input id="admin-documents-search" class="admin-filter-input" type="search" placeholder="Documento, pedido ou cliente..."><select id="admin-documents-type" class="admin-filter-select"><option value="">Todos os documentos</option><option value="proforma">Facturas Proforma</option><option value="invoice">Facturas</option></select></div></div>
+          <div id="admin-documents-list" class="operations-admin-list"></div>
+        </div>
+      </section>
+
+      <section class="admin-section" data-admin-panel="delivery">
+        <div class="panel-card">
+          <div class="section-header-row"><div><h2>Entregas e levantamentos</h2><p class="admin-section-note">Atualize o estado da preparação, entrega ou levantamento.</p></div><div class="admin-toolbar"><input id="admin-delivery-search" class="admin-filter-input" type="search" placeholder="Pedido, cliente ou morada..."><select id="admin-delivery-status" class="admin-filter-select"><option value="">Todos os estados</option><option value="pending">A preparar</option><option value="preparing">Em preparação</option><option value="ready">Pronto</option><option value="out_for_delivery">Em entrega</option><option value="delivered">Entregue</option><option value="picked_up">Levantado</option><option value="cancelled">Cancelado</option></select></div></div>
+          <div id="admin-delivery-list" class="operations-admin-list"></div>
+        </div>
+      </section>
+
+      <section class="admin-section" data-admin-panel="reports">
+        <div class="panel-card">
+          <div class="section-header-row"><div><h2>Relatórios</h2><p class="admin-section-note">Indicadores operacionais com filtros por período.</p></div><div class="admin-toolbar"><select id="report-period" class="admin-filter-select"><option value="7">Últimos 7 dias</option><option value="30" selected>Últimos 30 dias</option><option value="90">Últimos 90 dias</option><option value="365">Últimos 12 meses</option></select></div></div>
+          <div id="admin-report-grid" class="report-grid"></div>
+          <div class="report-two-columns"><div><h3>Serviços mais pedidos</h3><div id="report-services" class="report-list"></div></div><div><h3>Estados dos pedidos</h3><div id="report-statuses" class="report-list"></div></div></div>
+        </div>
+      </section>
+
       <section class="admin-section" data-admin-panel="admins">
         <div class="panel-card">
           <div class="section-header-row"><div><h2>Administradores</h2><p class="admin-section-note">Conceda ou remova acesso ao backoffice.</p></div></div>
@@ -131,5 +164,6 @@
   <script src="./js/supabase.js"></script>
   <script src="./js/admin.js"></script>
   <script src="./js/admin-payments.js"></script>
+  <script src="./js/admin-operations.js"></script>
 </body>
 </html>
