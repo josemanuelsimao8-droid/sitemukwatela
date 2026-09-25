@@ -372,7 +372,7 @@
         const shouldPay = button.textContent.trim() === 'Pagar agora';
         window.location.href = shouldPay
           ? 'pagamento.html?order=' + encodeURIComponent(button.dataset.orderDetail)
-          : 'pedido-confirmado.html';
+          : 'pedido.html?order=' + encodeURIComponent(button.dataset.orderDetail);
       });
     });
   }
