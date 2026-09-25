@@ -54,10 +54,9 @@
       const haystack = [
         item.order?.order_number,
         item.order?.customer_name,
-        item.payment_method,
-        item.provider_transaction_id,
-        item.reference,
-        item.customer_mobile
+        item.provider,
+        item.transaction_reference,
+        item.customer_note
       ].filter(Boolean).join(' ').toLowerCase();
 
       return (!query || haystack.includes(query)) && (!status || item.status === status);
@@ -153,7 +152,7 @@
 
     const payments = result.data || [];
     const orderIds = [...new Set(payments.map((item) => item.order_id))];
-    const customerIds = [...new Set(payments.map((item) => item.customer_id))];
+    const customerIds = [...new Set(payments.map((item) => item.user_id))];
 
     let orders = [];
     let profiles = [];
