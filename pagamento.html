@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mukwatela | Pagamento</title>
+  <link rel="icon" href="./public/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./css/styles.css">
+  <link rel="stylesheet" href="./css/payments.css">
+</head>
+<body data-page="payment">
+  <header class="site-header" id="top">
+    <div class="container nav-wrap">
+      <a href="index.html" class="brand" aria-label="Voltar ao início">
+        <img class="brand-logo" src="assets/logotipo%20.png" alt="Mukwatela logo">
+      </a>
+      <nav class="main-nav" aria-label="Navegação principal">
+        <ul>
+          <li><a href="index.html">Início</a></li>
+          <li><a href="services.html">Serviços</a></li>
+          <li><a href="portfolio.html">Portfólio</a></li>
+          <li><a href="contactos.html">Contactos</a></li>
+        </ul>
+      </nav>
+      <div class="header-actions">
+        <a class="btn btn-secondary" href="compras.html">Meus pedidos</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="section payment-page-shell">
+    <div class="container payment-page-grid">
+      <section class="panel-card payment-order-card">
+        <div class="payment-step-indicator">
+          <span class="is-done">1. Pedido</span>
+          <span class="is-active">2. Pagamento</span>
+        </div>
+        <div class="payment-heading">
+          <div>
+            <span class="eyebrow">Pagamento seguro</span>
+            <h1>Concluir pagamento</h1>
+            <p id="payment-status-copy">A preparar o seu pagamento.</p>
+          </div>
+          <span id="payment-status-badge" class="payment-status-badge payment-status-pending">A processar</span>
+        </div>
+        <div id="payment-message" class="auth-message" hidden aria-live="polite"></div>
+
+        <div id="payment-order-summary" class="payment-order-summary"></div>
+        <div id="payment-method-panel"></div>
+      </section>
+
+      <aside class="payment-trust-column">
+        <div class="panel-card">
+          <span class="eyebrow">Estado do pedido</span>
+          <div class="payment-timeline">
+            <div class="timeline-item is-done"><span>✓</span><div><strong>Pedido criado</strong><small>O pedido foi registado na sua conta.</small></div></div>
+            <div id="timeline-payment" class="timeline-item is-active"><span>2</span><div><strong>Aguardando pagamento</strong><small>Conclua o pagamento para avançar.</small></div></div>
+            <div id="timeline-production" class="timeline-item"><span>3</span><div><strong>Processamento</strong><small>A produção começa após confirmação.</small></div></div>
+          </div>
+        </div>
+
+        <div class="panel-card payment-help-card">
+          <span class="eyebrow">Precisa de ajuda?</span>
+          <h3>Pagamento ou pedido</h3>
+          <p>O estado do pagamento fica associado ao seu pedido e é atualizado na sua área de cliente.</p>
+          <a class="btn btn-secondary btn-block" href="contactos.html">Falar com a Mukwatela</a>
+        </div>
+      </aside>
+    </div>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="./js/supabase.js"></script>
+  <script src="./js/payment.js"></script>
+  <script src="./js/company.js"></script>
+  <script src="./js/main.js"></script>
+</body>
+</html>
