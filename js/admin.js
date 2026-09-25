@@ -282,11 +282,10 @@
   function mediaEditor(item){
     return '<article class="media-editor-card"><div class="media-editor-preview">'+(item.image_url?'<img src="'+esc(encodeURI(item.image_url))+'" alt="'+esc(item.title||'Imagem')+'">':'<div class="media-placeholder">Sem imagem</div>')+'</div><div class="media-editor-form">' +
       '<div class="editor-card-head"><div><span class="editor-kicker">'+esc(item.media_type)+'</span><h3>'+esc(item.title||'Imagem')+'</h3></div><span class="admin-chip '+(item.is_active?'chip-on':'chip-off')+'">'+(item.is_active?'Ativo':'Inativo')+'</span></div>' +
-      '<div class="field-two cms-field-grid"><div><label>Tipo</label><select data-media="'+encodeURIComponent(item.page+'|'+item.section+'|'+item.field)+'" data-content-key="'+esc(item.page)+'|'+esc(item.section)+'|'+esc(item.field)+'" data-field="media_type"><option value="hero" '+(item.media_type==='hero'?'selected':'')+'>Hero</option><option value="gallery" '+(item.media_type==='gallery'?'selected':'')+'>Galeria</option><option value="portfolio" '+(item.media_type==='portfolio'?'selected':'')+'>Portfólio</option></select></div><div><label>Categoria</label><input data-media="'+encodeURIComponent(item.page+'|'+item.section+'|'+item.field)+'" data-content-key="'+esc(item.page)+'|'+esc(item.section)+'|'+esc(item.field)+'" data-field="category" value="'+esc(item.category||'')+'"></div><div><label>Título</label><input data-media="'+encodeURIComponent(item.page+'|'+item.section+'|'+item.field)+'" data-content-key="'+esc(item.page)+'|'+esc(item.section)+'|'+esc(item.field)+'" data-field="title" value="'+esc(item.title||'')+'"></div><div><label>Ordem</label><input type="number" data-media="'+encodeURIComponent(item.page+'|'+item.section+'|'+item.field)+'" data-content-key="'+esc(item.page)+'|'+esc(item.section)+'|'+esc(item.field)+'" data-field="sort_order" value="'+(item.sort_order??0)+'"></div></div>' +
-      '<div class="field-row"><label>Imagem (caminho ou URL)</label><input data-media="'+encodeURIComponent(item.page+'|'+item.section+'|'+item.field)+'" data-content-key="'+esc(item.page)+'|'+esc(item.section)+'|'+esc(item.field)+'" data-field="image_url" value="'+esc(item.image_url||'')+'"></div>' +
-      '<div class="media-upload-row"><input type="file" accept="image/*" data-media-file="'+item.id+'"><button class="btn btn-secondary" type="button" data-upload-media="'+item.id+'">Carregar imagem</button></div>' +
-      '<div class="field-row"><label>Descrição</label><textarea data-media="'+encodeURIComponent(item.page+'|'+item.section+'|'+item.field)+'" data-content-key="'+esc(item.page)+'|'+esc(item.section)+'|'+esc(item.field)+'" data-field="description" rows="2">'+esc(item.description||'')+'</textarea></div><div class="field-row"><label>Mensagem WhatsApp</label><textarea data-media="'+encodeURIComponent(item.page+'|'+item.section+'|'+item.field)+'" data-content-key="'+esc(item.page)+'|'+esc(item.section)+'|'+esc(item.field)+'" data-field="whatsapp_message" rows="2">'+esc(item.whatsapp_message||'')+'</textarea></div>' +
-      '<div class="inline-action-row"><label class="checkbox-row"><input type="checkbox" data-media="'+encodeURIComponent(item.page+'|'+item.section+'|'+item.field)+'" data-content-key="'+esc(item.page)+'|'+esc(item.section)+'|'+esc(item.field)+'" data-field="is_active" '+(item.is_active?'checked':'')+'> Publicado</label><div class="card-actions"><button class="btn btn-primary" type="button" data-save-media="'+item.id+'">Guardar</button><button class="btn btn-secondary" type="button" data-delete-media="'+item.id+'">Apagar</button></div></div></div></article>';
+      '<div class="field-two cms-field-grid"><div><label>Tipo</label><select data-media="'+item.id+'" data-field="media_type"><option value="hero" '+(item.media_type==='hero'?'selected':'')+'>Hero</option><option value="gallery" '+(item.media_type==='gallery'?'selected':'')+'>Galeria</option><option value="portfolio" '+(item.media_type==='portfolio'?'selected':'')+'>Portfólio</option></select></div><div><label>Categoria</label><input data-media="'+item.id+'" data-field="category" value="'+esc(item.category||'')+'"></div><div><label>Título</label><input data-media="'+item.id+'" data-field="title" value="'+esc(item.title||'')+'"></div><div><label>Ordem</label><input type="number" data-media="'+item.id+'" data-field="sort_order" value="'+(item.sort_order??0)+'"></div></div>' +
+      '<div class="field-row"><label>Imagem (caminho ou URL)</label><input data-media="'+item.id+'" data-field="image_url" value="'+esc(item.image_url||'')+'"></div>' +
+      '<div class="field-row"><label>Descrição</label><textarea data-media="'+item.id+'" data-field="description" rows="2">'+esc(item.description||'')+'</textarea></div><div class="field-row"><label>Mensagem WhatsApp</label><textarea data-media="'+item.id+'" data-field="whatsapp_message" rows="2">'+esc(item.whatsapp_message||'')+'</textarea></div>' +
+      '<div class="inline-action-row"><label class="checkbox-row"><input type="checkbox" data-media="'+item.id+'" data-field="is_active" '+(item.is_active?'checked':'')+'> Publicado</label><div class="card-actions"><button class="btn btn-primary" type="button" data-save-media="'+item.id+'">Guardar</button><button class="btn btn-secondary" type="button" data-delete-media="'+item.id+'">Apagar</button></div></div></div></article>';
   }
 
   async function uploadMediaFile(id){
@@ -303,7 +302,7 @@
     if(result.error){msg('Não foi possível carregar a imagem.','error');return;}
 
     const publicUrl=db().storage.from('site-assets').getPublicUrl(path).data.publicUrl;
-    const update=await db().from('site_media').update({image_url:publicUrl,updated_at:new Date().toISOString()}).eq('id',id);
+    const update=await db().from('site_media').update({image_url:publicUrl}).eq('id',id);
     if(update.error){msg('A imagem foi carregada, mas não foi possível associá-la ao site.','error');return;}
 
     msg('Imagem carregada e publicada no CMS.','success');
@@ -315,7 +314,7 @@
     list.querySelectorAll('[data-upload-media]').forEach(button=>button.addEventListener('click',()=>uploadMediaFile(button.dataset.uploadMedia)));
     list.querySelectorAll('[data-save-media]').forEach(button=>button.addEventListener('click',async()=>{
       const id=button.dataset.saveMedia;
-      const patch={updated_at:new Date().toISOString()};
+      const patch={};
       list.querySelectorAll('[data-media="'+id+'"]').forEach(field=>{
         const name=field.dataset.field;
         if(name==='is_active')patch[name]=field.checked;
