@@ -96,23 +96,40 @@
   }
 
   async function setPaymentStatus(id, status) {
+    const button = section?.querySelector('[data-payment-id="' + id + '"][data-payment-status="' + status + '"]');
+    if (button) button.disabled = true;
+
     const note = status === 'rejected'
       ? window.prompt('Motivo da rejeição (opcional):') || null
       : null;
 
-    const result = await client().rpc('admin_set_payment_status', {
-      p_payment_id: id,
-      p_status: status,
-      p_note: note
-    });
+    try {
+      const result = await client().rpc('admin_set_payment_status', {
+        p_payment_id: id,
+        p_status: status,
+        p_note: note
+      });
 
-    if (result.error) {
-      console.error(result.error);
-      alert('Não foi possível atualizar o pagamento.');
-      return;
+      if (result.error) {
+        console.error('admin_set_payment_status:', result.error);
+        const detail = result.error.message || result.error.details || result.error.hint || 'Erro desconhecido.';
+        alert('Não foi possível atualizar o pagamento.\n\n' + detail);
+        return;
+      }
+
+      alert(status === 'paid'
+        ? 'Pagamento confirmado com sucesso.'
+        : status === 'rejected'
+          ? 'Pagamento rejeitado.'
+          : 'Estado do pagamento atualizado.');
+
+      await load();
+    } catch (error) {
+      console.error('admin_set_payment_status exception:', error);
+      alert('Erro ao atualizar o pagamento.\n\n' + (error?.message || error));
+    } finally {
+      if (button) button.disabled = false;
     }
-
-    await load();
   }
 
   async function load() {
