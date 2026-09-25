@@ -135,16 +135,29 @@
         return;
       }
 
+      const button = document.getElementById('forgot-password-btn');
+      if (button) button.disabled = true;
+
+      const recoveryUrl = ['localhost', '127.0.0.1'].includes(window.location.hostname)
+        ? new URL('recuperar-password.html', window.location.href).href
+        : 'https://sitemukwatela.vercel.app/recuperar-password.html';
+
       const { error } = await client().auth.resetPasswordForEmail(email, {
-        redirectTo: new URL('recuperar-password.html', window.location.href).href
+        redirectTo: recoveryUrl
       });
+
+      if (error) {
+        console.error('resetPasswordForEmail:', error);
+      }
 
       message(
         error
-          ? 'Não foi possível enviar o email de recuperação.'
-          : 'Enviámos um link de recuperação para o seu email.',
+          ? 'Não foi possível enviar o email de recuperação: ' + (error.message || 'erro desconhecido.')
+          : 'Enviámos um link de recuperação para o seu email. Abra o link no mesmo navegador onde solicitou a recuperação.',
         error ? 'error' : 'success'
       );
+
+      if (button) button.disabled = false;
     });
   }
 
