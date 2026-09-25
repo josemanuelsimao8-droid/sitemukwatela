@@ -66,7 +66,7 @@
 
   async function fetchService(id) {
     const result = await client().from('services')
-      .select('id,name,slug,category,description,image_url,features,unit_price,currency,is_active,sort_order')
+      .select('id,name,slug,category,description,image_url,features,unit_price,currency,is_active,sort_order,item_type,sku,unit_label,stock_quantity,is_featured')
       .eq('id', id)
       .eq('is_active', true)
       .maybeSingle();
@@ -118,7 +118,7 @@
 
       const category = document.createElement('span');
       category.className = 'eyebrow';
-      category.textContent = service.category || 'Serviço';
+      category.textContent = service.item_type === 'material' ? 'Material' : (service.category || 'Serviço');
 
       const title = document.createElement('h2');
       title.textContent = service.name;
@@ -138,7 +138,7 @@
       footer.className = 'service-catalog-footer';
 
       const price = document.createElement('strong');
-      price.textContent = money(service.unit_price, service.currency);
+      price.textContent = service.unit_price === null ? money(service.unit_price, service.currency) : money(service.unit_price, service.currency) + ' / ' + (service.unit_label || 'unidade');
 
       const button = document.createElement('button');
       button.type = 'button';
@@ -149,7 +149,9 @@
           window.location.href = 'admin.html';
         });
       } else {
-        button.textContent = service.unit_price === null ? 'Solicitar serviço' : 'Comprar serviço';
+        button.textContent = service.item_type === 'material'
+          ? (service.unit_price === null ? 'Solicitar material' : 'Comprar material')
+          : (service.unit_price === null ? 'Solicitar serviço' : 'Comprar serviço');
         button.addEventListener('click', () => {
           selectService(service);
           window.location.href = currentSession ? 'checkout.html' : 'auth.html';
@@ -185,7 +187,7 @@
     if (clientName) clientName.value = profileResult.data?.full_name || '';
 
     if (!service) {
-      summary.innerHTML = '<p>Selecione um serviço na área de Serviços para continuar.</p>';
+      summary.innerHTML = '<p>Selecione um serviço ou material no catálogo para continuar.</p>';
       form.hidden = true;
       return;
     }
@@ -205,13 +207,16 @@
     const description = document.createElement('p');
     description.textContent = service.description || '';
     const price = document.createElement('strong');
-    price.textContent = money(service.unit_price, service.currency);
+    price.textContent = service.unit_price === null
+      ? money(service.unit_price, service.currency)
+      : money(service.unit_price, service.currency) + ' / ' + (service.unit_label || 'unidade');
     content.append(title, description, price);
     box.append(image, content);
 
     summary.innerHTML = '';
     summary.appendChild(box);
 
+    const itemType = service.item_type === 'material' ? 'material' : 'service';
     const qty = document.getElementById('service-quantity');
     const totalNode = document.getElementById('checkout-total');
     const paymentList = document.getElementById('payment-method-list');
@@ -224,6 +229,13 @@
           ? 'Valor em ' + String(service.currency || 'AOA') + ' — sob orçamento'
           : money(Number(service.unit_price) * quantity, service.currency);
       }
+      document.querySelectorAll('[data-service-only]').forEach((node) => {
+        node.hidden = itemType !== 'service';
+      });
+      const qtyLabel = document.querySelector('label[for="service-quantity"]');
+      if (qtyLabel) qtyLabel.textContent = itemType === 'material' ? 'Quantidade' : 'Quantidade';
+      const paymentContinue = document.querySelector('#checkout-form button[type="submit"]');
+      if (paymentContinue) paymentContinue.textContent = service.unit_price === null ? 'ENVIAR PARA ORÇAMENTO' : 'CONTINUAR PARA PAGAMENTO';
     }
 
     if (qty) qty.addEventListener('input', updateTotal);
@@ -263,48 +275,8 @@
     paymentList?.addEventListener('change', renderPaymentInstructions);
     renderPaymentInstructions();
 
-    form.addEventListener('submit', async (event) => {
-      event.preventDefault();
-
-      const quantity = Math.max(1, Number(qty?.value || 1));
-      const paymentMethod = form.querySelector('input[name="paymentMethod"]:checked')?.value || null;
-      if (!paymentMethod) {
-        showMessage('Selecione um método de pagamento.', 'error');
-        return;
-      }
-
-      const specifications = {
-        format: document.getElementById('service-format')?.value || '',
-        material: document.getElementById('service-material')?.value.trim() || '',
-        dimensions: document.getElementById('service-dimensions')?.value.trim() || '',
-        deadline: document.getElementById('service-deadline')?.value.trim() || ''
-      };
-      const notes = document.getElementById('service-observations')?.value.trim() || null;
-      const submit = form.querySelector('button[type="submit"]');
-      submit.disabled = true;
-      submit.textContent = 'A processar...';
-
-      const result = await client().rpc('create_service_order', {
-        p_service_id: service.id,
-        p_quantity: quantity,
-        p_notes: notes,
-        p_specifications: specifications,
-        p_payment_method: paymentMethod
-      });
-
-      if (result.error) {
-        console.error(result.error);
-        showMessage('Não foi possível criar o pedido. Tente novamente.', 'error');
-        submit.disabled = false;
-        submit.textContent = service.unit_price === null ? 'Solicitar serviço' : 'Confirmar pedido';
-        return;
-      }
-
-      sessionStorage.setItem('mukwatela-last-order-id', result.data.id);
-      sessionStorage.removeItem('mukwatela-selected-service-id');
-      sessionStorage.removeItem('mukwatela-selected-service');
-      window.location.href = 'pedido-confirmado.html';
-    });
+    // O checkout é submetido exclusivamente por js/checkout-payment.js.
+;
   }
 
   const statusLabels = {
