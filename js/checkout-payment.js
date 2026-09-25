@@ -21,7 +21,7 @@
 
   async function loadService(id) {
     const result = await client().from('services')
-      .select('id,name,unit_price,currency,is_active')
+      .select('id,name,unit_price,currency,is_active,item_type,unit_label,stock_quantity')
       .eq('id', id)
       .eq('is_active', true)
       .maybeSingle();
@@ -48,13 +48,17 @@
       return;
     }
 
-    const paymentMethod = selectedPaymentMethod(form);
-    if (!paymentMethod) {
-      message('Selecione uma forma de pagamento.', 'error');
+    const quantity = Math.max(1, Number(document.getElementById('service-quantity')?.value || 1));
+    if (service.item_type === 'material' && service.stock_quantity !== null && quantity > Number(service.stock_quantity)) {
+      message('A quantidade solicitada ultrapassa o stock disponível (' + service.stock_quantity + ' ' + (service.unit_label || 'unidade') + ').', 'error');
       return;
     }
 
-    const quantity = Math.max(1, Number(document.getElementById('service-quantity')?.value || 1));
+    const paymentMethod = service.unit_price === null ? null : selectedPaymentMethod(form);
+    if (service.unit_price !== null && !paymentMethod) {
+      message('Selecione uma forma de pagamento.', 'error');
+      return;
+    }
     const specifications = {
       format: document.getElementById('service-format')?.value || '',
       material: document.getElementById('service-material')?.value.trim() || '',
@@ -72,6 +76,8 @@
     }
 
     const submit = form.querySelector('button[type="submit"]');
+    const paymentStage = form.querySelector('.checkout-payment-stage');
+    if (paymentStage) paymentStage.hidden = service.unit_price === null;
 
     submit.disabled = true;
     submit.textContent = 'A criar pedido...';
@@ -89,7 +95,15 @@
 
     if (result.error) {
       console.error(result.error);
-      message('Não foi possível criar o pedido. Tente novamente.', 'error');
+      const code = String(result.error.code || '');
+      const detail = String(result.error.message || '');
+      if (detail.includes('INSUFFICIENT_STOCK') || detail.includes('Insufficient stock')) {
+        message('O stock disponível não é suficiente para esta quantidade.', 'error');
+      } else if (detail.includes('PAYMENT_METHOD_NOT_AVAILABLE') || code === 'PGRST202') {
+        message('Este método de pagamento não está disponível de momento.', 'error');
+      } else {
+        message('Não foi possível criar o pedido. Tente novamente.', 'error');
+      }
       submit.disabled = false;
       submit.textContent = 'CONTINUAR PARA PAGAMENTO';
       return;
