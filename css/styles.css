@@ -2024,3 +2024,13 @@ input:focus, textarea:focus, select:focus { border-color: #e7ae24; box-shadow: 0
   .checkout-service-box{grid-template-columns:1fr}
   .checkout-service-box img{width:100%;height:220px}
 }
+
+
+/* Stage 3: payment methods */
+.payment-method-list{display:grid;gap:12px}
+.payment-method-option{display:flex;align-items:flex-start;gap:12px;padding:16px;border:1px solid var(--line);background:#fff;cursor:pointer}
+.payment-method-option input{margin-top:4px}
+.payment-method-option strong,.payment-method-option small{display:block}
+.payment-method-option small{margin-top:4px;color:var(--muted)}
+.payment-instructions{padding:16px;border:1px dashed var(--line);background:rgba(245,195,45,.06);min-height:50px}
+.payment-instructions p{margin-top:6px}
