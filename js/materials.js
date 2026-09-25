@@ -3,7 +3,7 @@
   const money=(v,c='AOA')=>v==null?'Sob orçamento':c+' '+Number(v).toLocaleString('pt-PT',{minimumFractionDigits:2,maximumFractionDigits:2});
   const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
   async function getSession(){const r=await client().auth.getUser();return r.data?.user?{user:r.data.user}:null;}
-  async function getRole(uid){if(!uid)return'guest';const r=await client().from('user_roles').select('role').eq('user_id',uid).maybeSingle();return r.data?.role||'customer';}
+  async function getRole(uid){if(!uid)return'guest';const r=await client().from('profiles').select('role').eq('id',uid).maybeSingle();return r.data?.role||'customer';}
 
   async function loadMaterials(){
     const list=document.getElementById('materials-list');if(!list)return;
