@@ -24,7 +24,7 @@
   }
 
   async function appRole(userId){
-    const role=await db().from('user_roles').select('role').eq('user_id',userId).maybeSingle();
+    const role=await db().from('profiles').select('role').eq('id',userId).maybeSingle();
     if(!role.error && role.data?.role)return role.data.role;
     return 'customer';
   }
@@ -85,7 +85,7 @@
   }
 
   async function loadOrders(){
-    const result=await db().from('orders').select('id,order_number,customer_id,status,total,currency,payment_method,payment_status,created_at,profiles(full_name),order_items(service_name,quantity),payments(id,status)').order('created_at',{ascending:false}).limit(250);
+    const result=await db().from('orders').select('id,order_number,user_id,status,total,currency,payment_method,payment_status,created_at,profiles(full_name),order_items(service_name,quantity),payments(id,status)').order('created_at',{ascending:false}).limit(250);
     if(result.error){msg('Não foi possível carregar pedidos.','error');return;}
     cache.orders=result.data||[];
     renderOrders();
