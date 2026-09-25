@@ -44,61 +44,47 @@
           <div class="panel-card checkout-panel">
             <h2>Dados do cliente</h2>
             <form id="checkout-form" class="checkout-form">
-              <div class="field-row field-two">
+              <div class="field-row">
                 <div>
                   <label for="checkout-name">Nome</label>
-                  <input id="checkout-name" name="name" type="text" required />
-                </div>
-                <div>
-                  <label for="checkout-email">Email</label>
-                  <input id="checkout-email" name="email" type="email" required />
+                  <input id="checkout-name" name="name" type="text" readonly />
                 </div>
               </div>
-              <div class="field-row">
-                <label for="checkout-phone">Telefone</label>
-                <input id="checkout-phone" name="phone" type="tel" required />
+                <div class="field-row field-two">
+                  <div>
+                    <label for="service-material">Material</label>
+                    <input id="service-material" type="text" placeholder="Material pretendido" />
+                  </div>
+                  <div>
+                    <label for="service-dimensions">Dimensões</label>
+                    <input id="service-dimensions" type="text" placeholder="Ex.: A4" />
+                  </div>
+                </div>
+                <div class="field-row">
+                  <label for="service-observations">Observações</label>
+                  <textarea id="service-observations" rows="4" placeholder="Detalhes relevantes do pedido."></textarea>
+                </div>
+                <div class="field-row">
+                  <label for="service-deadline">Prazo pretendido</label>
+                  <input id="service-deadline" type="text" placeholder="Ex.: 7 dias úteis" />
+                </div>
               </div>
 
-              <div id="dynamic-service-fields" class="dynamic-service-fields"></div>
-
-              <h3 class="checkout-subtitle">Pagamento</h3>
-              <div class="payment-options">
-                <label class="payment-option"><input type="radio" name="paymentMethod" value="Cartão bancário" checked /> Cartão bancário</label>
-                <label class="payment-option"><input type="radio" name="paymentMethod" value="Cartão guardado" /> Cartão guardado</label>
-                <label class="payment-option"><input type="radio" name="paymentMethod" value="Outro método" /> Outro método de pagamento</label>
+              <h3 class="checkout-subtitle">Detalhes do pedido</h3>
+              <div class="checkout-price-list">
+                <div><span>Total previsto</span><strong id="checkout-total">Sob orçamento</strong></div>
               </div>
-
-              <div class="field-row">
-                <label for="card-name">Nome no cartão</label>
-                <input id="card-name" name="cardName" type="text" placeholder="NOME NO CARTÃO" />
-              </div>
-              <div class="field-row field-three">
-                <div>
-                  <label for="card-number">Número do cartão</label>
-                  <input id="card-number" name="cardNumber" type="text" inputmode="numeric" maxlength="19" placeholder="1234 5678 9012 3456" />
-                </div>
-                <div>
-                  <label for="card-expiry">Validade</label>
-                  <input id="card-expiry" name="cardExpiry" type="text" placeholder="MM/AA" />
-                </div>
-                <div>
-                  <label for="card-cvv">CVV</label>
-                  <input id="card-cvv" name="cardCvv" type="password" maxlength="4" placeholder="***" />
-                </div>
-              </div>
-              <label class="checkbox-row" for="save-card">
-                <input id="save-card" name="saveCard" type="checkbox" />
-                <span>Guardar este cartão para futuras compras</span>
-              </label>
-              <button class="btn btn-primary btn-block" type="submit">PAGAR AGORA</button>
+              <button class="btn btn-primary btn-block" type="submit">CONFIRMAR PEDIDO</button>
             </form>
           </div>
         </div>
       </div>
     </main>
 
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="./js/supabase.js"></script>
+    <script src="./js/shop.js"></script>
     <script src="./js/company.js"></script>
     <script src="./js/main.js"></script>
-    <script src="./js/mukwatela-demo.js"></script>
   </body>
 </html>
