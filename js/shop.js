@@ -324,11 +324,12 @@
     }
 
     body.innerHTML = orders.map((order) => {
-      const item = order.order_items?.[0];
+      const items = order.order_items || [];
       const amount = order.total === null ? 'Sob orçamento' : money(order.total, order.currency);
+      const itemLabel = items.length > 1 ? items.map(item => (item.item_type === 'material' ? 'Material: ' : 'Serviço: ') + (item.service_name || 'Item')).join(', ') : ((items[0]?.item_type === 'material' ? 'Material: ' : 'Serviço: ') + (items[0]?.service_name || 'Item'));
       return '<tr>' +
         '<td>' + order.order_number + '</td>' +
-        '<td><span class="order-item-type">' + (item?.item_type === 'material' ? 'Material' : 'Serviço') + '</span> ' + (item?.service_name || 'Item') + '</td>' +
+        '<td>' + itemLabel + '</td>' +
         '<td>' + new Date(order.created_at).toLocaleDateString('pt-PT') + '</td>' +
         '<td>' + amount + '</td>' +
         '<td><span class="status-pill payment-status-table payment-status-table-' + (order.payment_status || 'unpaid') + '">' + paymentStatusLabel(order.payment_status) + '</span></td>' +
@@ -371,7 +372,7 @@
     if (!await requireCustomer()) return;
 
     const ordersResult = await client().from('orders')
-      .select('id,status,payment_status,created_at,order_items(quantity,item_type)');
+      .select('id,order_number,status,payment_status,created_at,order_items(quantity,item_type)');
     const notesResult = await client().from('notifications')
       .select('id,title,message,is_read,created_at')
       .order('created_at', { ascending: false })
