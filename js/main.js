@@ -100,29 +100,36 @@ function initHeader() {
   });
 }
 
+const heroTimers = new WeakMap();
+
 function initHeroCarousel() {
   const carousels = document.querySelectorAll('[data-hero-carousel]');
   if (!carousels.length) return;
 
   carousels.forEach((carousel) => {
-    const slides = carousel.querySelectorAll('.hero-slide');
+    const previousTimer = heroTimers.get(carousel);
+    if (previousTimer) {
+      clearInterval(previousTimer);
+      heroTimers.delete(carousel);
+    }
+
+    const slides = [...carousel.querySelectorAll('.hero-slide')];
     if (slides.length < 2) return;
 
     let currentIndex = 0;
     const update = () => {
-      slides.forEach((slide, index) => {
-        slide.classList.toggle('is-active', index === currentIndex);
-      });
+      slides.forEach((slide, index) => slide.classList.toggle('is-active', index === currentIndex));
       currentIndex = (currentIndex + 1) % slides.length;
     };
 
     update();
     const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    if (!reducedMotion) {
-      setInterval(update, 5500);
-    }
+    if (!reducedMotion) heroTimers.set(carousel, setInterval(update, 5500));
   });
 }
+
+window.addEventListener('cms:hero-updated', initHeroCarousel);
+window.addEventListener('cms:content-updated', initAnimations);
 
 function initAnimations() {
   document.body.classList.add('js-ready');
@@ -247,7 +254,7 @@ function bindWhatsAppLinks() {
 
 function initAssetGallery() {
   const gallery = document.getElementById('assets-gallery');
-  if (!gallery) return;
+  if (!gallery || window.MukwatelaCMS) return;
 
   gallery.innerHTML = '';
   ASSET_IMAGES.forEach((src, index) => {
@@ -273,5 +280,9 @@ function init() {
   initPortfolio();
   bindWhatsAppLinks();
 }
+
+window.addEventListener('cms:content-updated', () => {
+  bindWhatsAppLinks();
+});
 
 document.addEventListener('DOMContentLoaded', init);
