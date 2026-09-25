@@ -98,3 +98,8 @@
   .payment-trust-column{grid-template-columns:1fr}
   .payment-admin-main{grid-template-columns:1fr}
 }
+
+.payment-status-table-confirmed{background:#eefaf2;border-color:#b7dfc0;color:#176b37}
+.payment-status-table-submitted{background:#fff8e7;border-color:#efd48a;color:#7a5c00}
+.payment-status-table-rejected{background:#fff1f1;border-color:#edc2c2;color:#8b2525}
+.payment-status-table-unpaid{background:#f8fafc;color:var(--text)}
