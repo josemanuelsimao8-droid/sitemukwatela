@@ -102,7 +102,13 @@
       return;
     }
 
-    if (!paymentMethod) return;
+    if (!paymentMethod || paymentMethod.code !== 'transferencia') {
+      const box = document.createElement('div');
+      box.className = 'payment-unavailable-card';
+      box.innerHTML = '<span class="eyebrow">Pagamento</span><h3>Transferência bancária</h3><p>Nesta fase, a Mukwatela aceita pagamentos apenas por transferência bancária.</p><a class="btn btn-secondary" href="compras.html">Voltar aos pedidos</a>';
+      root.appendChild(box);
+      return;
+    }
 
     const shell = document.createElement('div');
     shell.className = 'payment-method-card';
@@ -114,164 +120,85 @@
     eyebrow.className = 'eyebrow';
     eyebrow.textContent = 'Método selecionado';
     const h2 = document.createElement('h2');
-    h2.textContent = paymentMethod.name;
+    h2.textContent = 'Transferência bancária';
     heading.append(eyebrow, h2);
+
     const amount = document.createElement('strong');
     amount.className = 'payment-method-card-amount';
     amount.textContent = money(order.total, order.currency);
     header.append(heading, amount);
     shell.appendChild(header);
 
-    if (paymentMethod.code === 'multicaixa_express') {
-      const info = document.createElement('div');
-      info.className = 'payment-provider-panel';
+    const info = document.createElement('div');
+    info.className = 'payment-provider-panel';
 
-      const text = document.createElement('p');
-      text.textContent = 'Introduza o número associado ao seu Multicaixa Express. A plataforma enviará o pedido e, depois, terá de confirmar a operação na aplicação.';
-      info.appendChild(text);
+    const intro = document.createElement('p');
+    intro.textContent = 'Faça a transferência usando exatamente o valor do pedido e coloque o número do pedido na descrição/referência. Depois, envie o comprovativo nesta página para validação.';
+    info.appendChild(intro);
 
-      const label = document.createElement('label');
-      label.textContent = 'Número Multicaixa Express';
-      const input = document.createElement('input');
-      input.id = 'mcx-mobile';
-      input.type = 'tel';
-      input.inputMode = 'numeric';
-      input.autocomplete = 'tel';
-      input.placeholder = '9XXXXXXXX';
-      input.maxLength = 12;
-      label.appendChild(input);
-      info.appendChild(label);
+    const account = document.createElement('div');
+    account.className = 'payment-bank-details';
 
-      if (payment?.customer_mobile) input.value = payment.customer_mobile;
+    const accountTitle = document.createElement('h3');
+    accountTitle.textContent = 'Dados bancários da Mukwatela';
+    account.appendChild(accountTitle);
 
-      const button = document.createElement('button');
-      button.type = 'button';
-      button.className = 'btn btn-primary btn-block';
-      button.textContent = payment?.status === 'processing' ? 'PAGAMENTO JÁ ENVIADO' : 'PAGAR COM MULTICAIXA EXPRESS';
-      button.disabled = payment?.status === 'processing';
-      button.addEventListener('click', () => initiateMulticaixa(input.value, button));
-
-      const note = document.createElement('div');
-      note.className = 'payment-provider-note';
-      note.innerHTML = '<strong>Como funciona</strong><p>1. A Mukwatela envia a cobrança. 2. O pedido aparece na sua app Multicaixa Express. 3. Confirme a operação na app. 4. O estado do pedido será atualizado automaticamente.</p>';
-
-      info.append(button, note);
-      shell.appendChild(info);
-
-    } else {
-      const info = document.createElement('div');
-      info.className = 'payment-provider-panel';
-
-      const account = document.createElement('div');
-      account.className = 'payment-bank-details';
-      const accountTitle = document.createElement('h3');
-      accountTitle.textContent = 'Dados para transferência';
-      account.appendChild(accountTitle);
-
-      if (paymentMethod.account_details) {
-        const accountText = document.createElement('p');
-        accountText.textContent = paymentMethod.account_details;
-        account.appendChild(accountText);
-      }
-
-      if (paymentMethod.instructions) {
-        const instructions = document.createElement('div');
-        instructions.className = 'payment-bank-instructions';
-        instructions.textContent = paymentMethod.instructions;
-        account.appendChild(instructions);
-      }
-
-      info.appendChild(account);
-
-      const form = document.createElement('div');
-      form.className = 'payment-proof-form';
-
-      const refLabel = document.createElement('label');
-      refLabel.textContent = 'Referência / comprovativo';
-      const ref = document.createElement('input');
-      ref.id = 'bank-reference';
-      ref.type = 'text';
-      ref.placeholder = 'Ex.: número da operação';
-      refLabel.appendChild(ref);
-
-      const fileLabel = document.createElement('label');
-      fileLabel.textContent = 'Comprovativo (PDF, JPG ou PNG)';
-      const file = document.createElement('input');
-      file.id = 'bank-proof';
-      file.type = 'file';
-      file.accept = 'application/pdf,image/jpeg,image/png';
-      fileLabel.appendChild(file);
-
-      const noteLabel = document.createElement('label');
-      noteLabel.textContent = 'Observação';
-      const note = document.createElement('textarea');
-      note.id = 'bank-note';
-      note.rows = 3;
-      note.placeholder = 'Ex.: transferência feita pelo titular João...';
-      noteLabel.appendChild(note);
-
-      const submit = document.createElement('button');
-      submit.type = 'button';
-      submit.className = 'btn btn-primary btn-block';
-      submit.textContent = payment?.status === 'awaiting_confirmation' ? 'COMPROVATIVO ENVIADO' : 'ENVIAR COMPROVATIVO';
-      submit.disabled = payment?.status === 'awaiting_confirmation';
-
-      submit.addEventListener('click', () => submitBankProof(file, ref, note, submit));
-
-      form.append(refLabel, fileLabel, noteLabel, submit);
-      info.appendChild(form);
-      shell.appendChild(info);
+    if (paymentMethod.account_details) {
+      const accountText = document.createElement('p');
+      accountText.textContent = paymentMethod.account_details;
+      account.appendChild(accountText);
     }
 
+    if (paymentMethod.instructions) {
+      const instructions = document.createElement('div');
+      instructions.className = 'payment-bank-instructions';
+      instructions.textContent = paymentMethod.instructions;
+      account.appendChild(instructions);
+    }
+
+    info.appendChild(account);
+
+    const form = document.createElement('div');
+    form.className = 'payment-proof-form';
+
+    const refLabel = document.createElement('label');
+    refLabel.textContent = 'Referência da transferência';
+    const ref = document.createElement('input');
+    ref.id = 'bank-reference';
+    ref.type = 'text';
+    ref.placeholder = 'Número da operação ou referência';
+    ref.value = payment?.reference || order.payment_reference || '';
+    refLabel.appendChild(ref);
+
+    const fileLabel = document.createElement('label');
+    fileLabel.textContent = 'Comprovativo (PDF, JPG ou PNG)';
+    const file = document.createElement('input');
+    file.id = 'bank-proof';
+    file.type = 'file';
+    file.accept = 'application/pdf,image/jpeg,image/png';
+    fileLabel.appendChild(file);
+
+    const noteLabel = document.createElement('label');
+    noteLabel.textContent = 'Observação';
+    const note = document.createElement('textarea');
+    note.id = 'bank-note';
+    note.rows = 3;
+    note.placeholder = 'Observação adicional (opcional)';
+    note.value = payment?.customer_note || '';
+    noteLabel.appendChild(note);
+
+    const submit = document.createElement('button');
+    submit.type = 'button';
+    submit.className = 'btn btn-primary btn-block';
+    submit.textContent = payment?.status === 'awaiting_confirmation' ? 'COMPROVATIVO ENVIADO' : 'ENVIAR COMPROVATIVO';
+    submit.disabled = payment?.status === 'awaiting_confirmation';
+    submit.addEventListener('click', () => submitBankProof(file, ref, note, submit));
+
+    form.append(refLabel, fileLabel, noteLabel, submit);
+    info.appendChild(form);
+
+    shell.appendChild(info);
     root.appendChild(shell);
-  }
-
-  async function initiateMulticaixa(rawMobile, button) {
-    const mobile = String(rawMobile || '').replace(/\D/g, '');
-    if (mobile.startsWith('244') && mobile.length === 12) {
-      rawMobile = mobile.slice(3);
-    } else {
-      rawMobile = mobile;
-    }
-
-    if (!/^9\d{8}$/.test(rawMobile)) {
-      showMessage('Introduza um número Multicaixa Express válido com 9 dígitos.', 'error');
-      return;
-    }
-
-    button.disabled = true;
-    button.textContent = 'A ENVIAR...';
-
-    const response = await fetch(
-      'https://jbnwatatstxudepllacg.supabase.co/functions/v1/payment-initiate',
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer ' + session.access_token
-        },
-        body: JSON.stringify({ order_id: order.id, mobile: rawMobile })
-      }
-    );
-
-    let data = null;
-    try { data = await response.json(); } catch {}
-
-    if (!response.ok) {
-      console.error(data);
-      const errorText = data?.error === 'PAYMENT_GATEWAY_NOT_CONFIGURED'
-        ? 'O pagamento Multicaixa Express ainda não foi ativado para esta conta.'
-        : (data?.message || 'Não foi possível iniciar o pagamento.');
-      showMessage(errorText, 'error');
-      button.disabled = false;
-      button.textContent = 'PAGAR COM MULTICAIXA EXPRESS';
-      return;
-    }
-
-    showMessage(data?.message || 'Pedido de pagamento enviado. Confirme na aplicação Multicaixa Express.', 'success');
-    payment = await loadPayment();
-    renderMethodPanel();
-    subscribeRealtime();
   }
 
   async function submitBankProof(fileInput, refInput, noteInput, button) {
@@ -406,6 +333,14 @@
 
       renderSummary();
       setStatus(order.payment_status === 'confirmed' ? 'paid' : 'pending');
+
+      if (order.payment_method !== 'transferencia') {
+        const root = document.getElementById('payment-method-panel');
+        if (root) {
+          root.innerHTML = '<div class="payment-unavailable-card"><span class="eyebrow">Pagamento</span><h3>Método não disponível</h3><p>Nesta fase, a Mukwatela aceita pagamentos apenas por transferência bancária.</p><a class="btn btn-secondary" href="compras.html">Voltar aos pedidos</a></div>';
+        }
+        return;
+      }
 
       if (order.total !== null && Number(order.total) > 0) {
         payment = await loadPayment();
