@@ -196,10 +196,43 @@
   }
 
   async function addService(){
-    const result=await db().from('services').insert({name:'Novo item',slug:'novo-item-'+Date.now(),category:'Nova categoria',description:'Descrição do item.',image_url:'',features:[],unit_price:null,currency:'AOA',item_type:'service',sku:null,unit_label:'unidade',stock_quantity:null,low_stock_threshold:0,is_featured:false,is_active:false,sort_order:cache.services.length+1});
-    if(result.error){msg(result.error.code==='23505'?'A referência/SKU deste item já existe. Use outra.':'Não foi possível adicionar o item.','error');return;}
-    msg('Item criado. Escolha o tipo, preencha os dados e guarde.','success');
+    filters.servicesType='service';
+    const result=await db().from('services').insert({name:'Novo serviço',slug:'novo-servico-'+Date.now(),category:'Nova categoria',description:'Descrição do serviço.',image_url:'',features:[],unit_price:null,currency:'AOA',item_type:'service',sku:null,unit_label:'unidade',stock_quantity:null,low_stock_threshold:0,is_featured:false,is_active:false,sort_order:cache.services.length+1});
+    if(result.error){msg(result.error.code==='23505'?'A referência/SKU deste item já existe. Use outra.':'Não foi possível adicionar o serviço.','error');return;}
+    msg('Novo serviço criado. Preencha os dados e guarde quando estiver pronto.','success');
     await loadServices();
+  }
+
+  async function addMaterial(){
+    filters.servicesType='material';
+    const result=await db().from('services').insert({
+      name:'Novo material',
+      slug:'novo-material-'+Date.now(),
+      category:'Materiais',
+      description:'Descrição do material.',
+      image_url:'',
+      features:[],
+      unit_price:null,
+      currency:'AOA',
+      item_type:'material',
+      sku:null,
+      unit_label:'unidade',
+      stock_quantity:0,
+      low_stock_threshold:0,
+      is_featured:false,
+      is_active:false,
+      sort_order:cache.services.length+1
+    });
+    if(result.error){
+      console.error(result.error);
+      msg(result.error.code==='23505'?'A referência/SKU deste material já existe. Use outra.':'Não foi possível adicionar o material.','error');
+      return;
+    }
+    msg('Novo material criado. Preencha preço, unidade, stock, imagem e publique no catálogo.','success');
+    await loadServices();
+    const typeFilter=document.getElementById('services-type-filter');
+    if(typeFilter) typeFilter.value='material';
+    renderServices();
   }
 
   async function loadMedia(){
@@ -514,6 +547,7 @@
     bindTabs();
 
     document.getElementById('add-service-btn')?.addEventListener('click',addService);
+    document.getElementById('add-material-btn')?.addEventListener('click',addMaterial);
     document.getElementById('add-media-btn')?.addEventListener('click',addMedia);
     document.getElementById('add-content-btn')?.addEventListener('click',addContent);
     document.getElementById('add-setting-btn')?.addEventListener('click',addSetting);
