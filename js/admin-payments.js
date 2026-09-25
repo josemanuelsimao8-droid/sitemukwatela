@@ -165,7 +165,7 @@
 
     const card = document.createElement('div');
     card.className = 'panel-card admin-payment-center';
-    card.innerHTML = '<div class="section-header-row"><div><h3>Movimentos de pagamento</h3><p class="admin-section-note">Acompanhe os pagamentos feitos pelos clientes e valide comprovativos.</p></div><div class="admin-toolbar"><input id="admin-payment-search" class="admin-filter-input" type="search" placeholder="Pedido, cliente, referência..."><select id="admin-payment-status-filter" class="admin-filter-select"><option value="">Todos os estados</option><option value="pending">Pendente</option><option value="processing">Processando</option><option value="awaiting_confirmation">Em validação</option><option value="paid">Pago</option><option value="rejected">Rejeitado</option></select></div></div><div id="admin-payment-list" class="payment-admin-list"></div>';
+    card.innerHTML = '<div class="section-header-row"><div><h3>Transferências bancárias</h3><p class="admin-section-note">Acompanhe as transferências dos clientes e valide os comprovativos.</p></div><div class="admin-toolbar"><input id="admin-payment-search" class="admin-filter-input" type="search" placeholder="Pedido, cliente, referência..."><select id="admin-payment-status-filter" class="admin-filter-select"><option value="">Todos os estados</option><option value="pending">Pendente</option><option value="processing">Processando</option><option value="awaiting_confirmation">Em validação</option><option value="paid">Pago</option><option value="rejected">Rejeitado</option></select></div></div><div id="admin-payment-list" class="payment-admin-list"></div>';
 
     paymentMethods.parentElement?.appendChild(card);
     section = card;
