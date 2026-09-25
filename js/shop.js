@@ -177,7 +177,7 @@
       const quantity = Math.max(1, Number(qty?.value || 1));
       if (totalNode) {
         totalNode.textContent = service.unit_price === null
-          ? 'Sob orçamento'
+          ? 'Valor em ' + String(service.currency || 'AOA') + ' — sob orçamento'
           : money(Number(service.unit_price) * quantity, service.currency);
       }
     }
@@ -265,6 +265,7 @@
 
   const statusLabels = {
     pending: 'Pendente',
+    pending_payment: 'A aguardar pagamento',
     pending_quote: 'A aguardar orçamento',
     processing: 'Em processamento',
     completed: 'Concluído',
@@ -329,7 +330,7 @@
     }
 
     const ordersResult = await client().from('orders')
-      .select('id,status,created_at,order_items(quantity)');
+      .select('id,status,payment_status,created_at,order_items(quantity)');
     const notesResult = await client().from('notifications')
       .select('id,title,message,is_read,created_at')
       .order('created_at', { ascending: false })
@@ -344,10 +345,11 @@
       sum + (order.order_items || []).reduce((sub, item) => sub + Number(item.quantity || 0), 0), 0
     );
     const quoteCount = orders.filter((order) => order.status === 'pending_quote').length;
+    const confirmedPayments = orders.filter((order) => order.payment_status === 'confirmed').length;
 
     document.getElementById('sum-services')?.replaceChildren(document.createTextNode(String(serviceCount)));
     document.getElementById('sum-orders')?.replaceChildren(document.createTextNode(String(orders.length)));
-    document.getElementById('sum-payments')?.replaceChildren(document.createTextNode('0'));
+    document.getElementById('sum-payments')?.replaceChildren(document.createTextNode(String(confirmedPayments)));
     document.getElementById('sum-budgets')?.replaceChildren(document.createTextNode(String(quoteCount)));
     document.getElementById('notifications-count')?.replaceChildren(document.createTextNode(String(notes.length)));
 
