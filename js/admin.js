@@ -26,13 +26,14 @@
   async function appRole(userId){
     const role=await db().from('user_roles').select('role').eq('user_id',userId).maybeSingle();
     if(!role.error && role.data?.role)return role.data.role;
-    const profile=await db().from('profiles').select('role').eq('id',userId).maybeSingle();
-    return profile.data?.role||'customer';
+    return 'customer';
   }
 
   async function requireAdmin(){
-    const session=(await db().auth.getSession()).data?.session;
-    if(!session){window.location.href='auth.html';return null;}
+    const authResult=await db().auth.getUser();
+    const user=authResult.data?.user;
+    if(authResult.error||!user){window.location.href='auth.html';return null;}
+    const session={user};
     const role=await appRole(session.user.id);
     if(role!=='admin'){window.location.href='dashboard.html';return null;}
     return session;
