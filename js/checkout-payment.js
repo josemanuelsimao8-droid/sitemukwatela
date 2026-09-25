@@ -5,7 +5,7 @@
   let catalog=[],zones=[],methods=[],hasQuote=false;
 
   function message(text,type='info'){const n=document.getElementById('shop-message');if(!n)return;n.textContent=text;n.dataset.type=type;n.hidden=false;}
-  async function getSession(){const r=await db().auth.getSession();return r.data?.session||null;}
+  async function getSession(){const r=await db().auth.getUser();return r.data?.user?{user:r.data.user}:null;}
   async function loadCatalog(){
     const items=cart().getItems();if(!items.length)return [];
     const r=await db().from('services').select('id,name,slug,category,description,image_url,features,unit_price,currency,item_type,sku,unit_label,stock_quantity,is_active').in('id',items.map(x=>x.id)).eq('is_active',true);
@@ -78,6 +78,7 @@
   document.addEventListener('DOMContentLoaded',async()=>{
     const form=document.getElementById('checkout-form');if(!form)return;
     const session=await getSession();if(!session){location.href='auth.html';return;}
+    await cart().requireAuth({redirect:false});
     catalog=await loadCatalog();if(!catalog.length){message('O carrinho está vazio.','error');form.hidden=true;return;}
     renderSummary(catalog);await loadProfile(session);
     try{
