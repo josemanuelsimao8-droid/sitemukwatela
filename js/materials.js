@@ -2,7 +2,7 @@
   const client=()=>window.supabaseClient, cart=()=>window.MukwatelaCart;
   const money=(v,c='AOA')=>v==null?'Sob orçamento':c+' '+Number(v).toLocaleString('pt-PT',{minimumFractionDigits:2,maximumFractionDigits:2});
   const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
-  async function getSession(){const r=await client().auth.getSession();return r.data?.session||null;}
+  async function getSession(){const r=await client().auth.getUser();return r.data?.user?{user:r.data.user}:null;}
   async function getRole(uid){if(!uid)return'guest';const r=await client().from('user_roles').select('role').eq('user_id',uid).maybeSingle();return r.data?.role||'customer';}
 
   async function loadMaterials(){
@@ -26,7 +26,7 @@
         const action=role==='admin'?'<a class="btn btn-primary" href="admin.html">Gerir no painel</a>':'<button class="btn btn-primary" type="button" data-buy-material="'+item.id+'">Adicionar ao carrinho</button>';
         return '<article class="service-catalog-card"><a class="service-catalog-media" href="produto.html?id='+encodeURIComponent(item.id)+'">'+(item.image_url?'<img src="'+encodeURI(item.image_url)+'" alt="'+esc(item.name)+'" loading="lazy">':'')+'</a><div class="service-catalog-body"><span class="eyebrow">Material</span><h2>'+esc(item.name)+'</h2><p>'+esc(item.description||'')+'</p><div class="service-feature-list">'+features+'</div><div class="service-catalog-footer"><div><strong>'+money(item.unit_price,item.currency)+'</strong>'+(item.unit_price!=null?'<small>/ '+esc(item.unit_label||'unidade')+'</small>':'')+stock+'</div><div class="catalog-card-actions">'+action+'<a class="catalog-detail-link" href="produto.html?id='+encodeURIComponent(item.id)+'">Detalhes</a></div></div></div></article>';
       }).join('');
-      list.querySelectorAll('[data-buy-material]').forEach(btn=>btn.addEventListener('click',()=>{const item=materials.find(x=>x.id===btn.dataset.buyMaterial);if(!item||!cart())return;if(item.stock_quantity!=null&&Number(item.stock_quantity)<1){alert('Este material está sem stock.');return;}cart().add(item,1,{});btn.textContent='Adicionado';setTimeout(()=>btn.textContent='Adicionar ao carrinho',1600);}));
+      list.querySelectorAll('[data-buy-material]').forEach(btn=>btn.addEventListener('click',async()=>{const item=materials.find(x=>x.id===btn.dataset.buyMaterial);if(!item||!cart())return;if(item.stock_quantity!=null&&Number(item.stock_quantity)<1){alert('Este material está sem stock.');return;}btn.disabled=true;const added=await cart().add(item,1,{});if(added){btn.textContent='Adicionado';setTimeout(()=>{btn.textContent='Adicionar ao carrinho';btn.disabled=false;},1600);}else{btn.disabled=false;}}));
     }
     search?.addEventListener('input',render);category?.addEventListener('change',render);sort?.addEventListener('change',render);render();
   }
