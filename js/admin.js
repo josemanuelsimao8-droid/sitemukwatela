@@ -206,7 +206,7 @@
     const list=document.getElementById('admin-services-list');
     list.querySelectorAll('[data-save-service]').forEach(button=>button.addEventListener('click',async()=>{
       const id=button.dataset.saveService;
-      const patch={updated_at:new Date().toISOString()};
+      const patch={};
       list.querySelectorAll('[data-service="'+id+'"]').forEach(field=>{
         const name=field.dataset.field;
         if(name==='features')patch[name]=field.value.split('\n').map(v=>v.trim()).filter(Boolean);
@@ -263,7 +263,7 @@
   }
 
   async function loadMedia(){
-    const result=await db().from('site_media').select('id,media_type,title,category,description,image_url,whatsapp_message,is_active,sort_order,updated_at').order('media_type').order('sort_order');
+    const result=await db().from('site_media').select('id,media_type,title,category,description,image_url,whatsapp_message,is_active,sort_order,created_at').order('media_type').order('sort_order');
     if(result.error){msg('Não foi possível carregar as imagens.','error');return;}
     cache.media=result.data||[];
     renderMedia();
@@ -282,11 +282,11 @@
   function mediaEditor(item){
     return '<article class="media-editor-card"><div class="media-editor-preview">'+(item.image_url?'<img src="'+esc(encodeURI(item.image_url))+'" alt="'+esc(item.title||'Imagem')+'">':'<div class="media-placeholder">Sem imagem</div>')+'</div><div class="media-editor-form">' +
       '<div class="editor-card-head"><div><span class="editor-kicker">'+esc(item.media_type)+'</span><h3>'+esc(item.title||'Imagem')+'</h3></div><span class="admin-chip '+(item.is_active?'chip-on':'chip-off')+'">'+(item.is_active?'Ativo':'Inativo')+'</span></div>' +
-      '<div class="field-two cms-field-grid"><div><label>Tipo</label><select data-media="'+item.id+'" data-field="media_type"><option value="hero" '+(item.media_type==='hero'?'selected':'')+'>Hero</option><option value="gallery" '+(item.media_type==='gallery'?'selected':'')+'>Galeria</option><option value="portfolio" '+(item.media_type==='portfolio'?'selected':'')+'>Portfólio</option></select></div><div><label>Categoria</label><input data-media="'+item.id+'" data-field="category" value="'+esc(item.category||'')+'"></div><div><label>Título</label><input data-media="'+item.id+'" data-field="title" value="'+esc(item.title||'')+'"></div><div><label>Ordem</label><input type="number" data-media="'+item.id+'" data-field="sort_order" value="'+(item.sort_order??0)+'"></div></div>' +
-      '<div class="field-row"><label>Imagem (caminho ou URL)</label><input data-media="'+item.id+'" data-field="image_url" value="'+esc(item.image_url||'')+'"></div>' +
+      '<div class="field-two cms-field-grid"><div><label>Tipo</label><select data-media="'+encodeURIComponent(item.page+'|'+item.section+'|'+item.field)+'" data-content-key="'+esc(item.page)+'|'+esc(item.section)+'|'+esc(item.field)+'" data-field="media_type"><option value="hero" '+(item.media_type==='hero'?'selected':'')+'>Hero</option><option value="gallery" '+(item.media_type==='gallery'?'selected':'')+'>Galeria</option><option value="portfolio" '+(item.media_type==='portfolio'?'selected':'')+'>Portfólio</option></select></div><div><label>Categoria</label><input data-media="'+encodeURIComponent(item.page+'|'+item.section+'|'+item.field)+'" data-content-key="'+esc(item.page)+'|'+esc(item.section)+'|'+esc(item.field)+'" data-field="category" value="'+esc(item.category||'')+'"></div><div><label>Título</label><input data-media="'+encodeURIComponent(item.page+'|'+item.section+'|'+item.field)+'" data-content-key="'+esc(item.page)+'|'+esc(item.section)+'|'+esc(item.field)+'" data-field="title" value="'+esc(item.title||'')+'"></div><div><label>Ordem</label><input type="number" data-media="'+encodeURIComponent(item.page+'|'+item.section+'|'+item.field)+'" data-content-key="'+esc(item.page)+'|'+esc(item.section)+'|'+esc(item.field)+'" data-field="sort_order" value="'+(item.sort_order??0)+'"></div></div>' +
+      '<div class="field-row"><label>Imagem (caminho ou URL)</label><input data-media="'+encodeURIComponent(item.page+'|'+item.section+'|'+item.field)+'" data-content-key="'+esc(item.page)+'|'+esc(item.section)+'|'+esc(item.field)+'" data-field="image_url" value="'+esc(item.image_url||'')+'"></div>' +
       '<div class="media-upload-row"><input type="file" accept="image/*" data-media-file="'+item.id+'"><button class="btn btn-secondary" type="button" data-upload-media="'+item.id+'">Carregar imagem</button></div>' +
-      '<div class="field-row"><label>Descrição</label><textarea data-media="'+item.id+'" data-field="description" rows="2">'+esc(item.description||'')+'</textarea></div><div class="field-row"><label>Mensagem WhatsApp</label><textarea data-media="'+item.id+'" data-field="whatsapp_message" rows="2">'+esc(item.whatsapp_message||'')+'</textarea></div>' +
-      '<div class="inline-action-row"><label class="checkbox-row"><input type="checkbox" data-media="'+item.id+'" data-field="is_active" '+(item.is_active?'checked':'')+'> Publicado</label><div class="card-actions"><button class="btn btn-primary" type="button" data-save-media="'+item.id+'">Guardar</button><button class="btn btn-secondary" type="button" data-delete-media="'+item.id+'">Apagar</button></div></div></div></article>';
+      '<div class="field-row"><label>Descrição</label><textarea data-media="'+encodeURIComponent(item.page+'|'+item.section+'|'+item.field)+'" data-content-key="'+esc(item.page)+'|'+esc(item.section)+'|'+esc(item.field)+'" data-field="description" rows="2">'+esc(item.description||'')+'</textarea></div><div class="field-row"><label>Mensagem WhatsApp</label><textarea data-media="'+encodeURIComponent(item.page+'|'+item.section+'|'+item.field)+'" data-content-key="'+esc(item.page)+'|'+esc(item.section)+'|'+esc(item.field)+'" data-field="whatsapp_message" rows="2">'+esc(item.whatsapp_message||'')+'</textarea></div>' +
+      '<div class="inline-action-row"><label class="checkbox-row"><input type="checkbox" data-media="'+encodeURIComponent(item.page+'|'+item.section+'|'+item.field)+'" data-content-key="'+esc(item.page)+'|'+esc(item.section)+'|'+esc(item.field)+'" data-field="is_active" '+(item.is_active?'checked':'')+'> Publicado</label><div class="card-actions"><button class="btn btn-primary" type="button" data-save-media="'+item.id+'">Guardar</button><button class="btn btn-secondary" type="button" data-delete-media="'+item.id+'">Apagar</button></div></div></div></article>';
   }
 
   async function uploadMediaFile(id){
@@ -344,7 +344,7 @@
   }
 
   async function loadContent(){
-    const result=await db().from('site_content').select('id,page,section,field,value,updated_at').order('page').order('section').order('field');
+    const result=await db().from('site_content').select('page,section,field,value,updated_at').order('page').order('section').order('field');
     if(result.error){msg('Não foi possível carregar conteúdos.','error');return;}
     cache.content=result.data||[];
     fillContentFilters();
@@ -364,7 +364,7 @@
     const list=document.getElementById('content-admin');
     if(!list)return;
     const data=filtered(cache.content,filters.contentSearch,[x=>x.page,x=>x.section,x=>x.field,x=>x.value]).filter(x=>!filters.contentPage||x.page===filters.contentPage).filter(x=>!filters.contentSection||x.section===filters.contentSection);
-    list.innerHTML=data.map(item=>'<article class="cms-editor-card"><div class="editor-card-head"><div><span class="editor-kicker">'+esc(item.page)+' / '+esc(item.section)+'</span><h3>'+esc(item.field)+'</h3></div><small>Atualizado: '+fmtDate(item.updated_at)+'</small></div><div class="field-two cms-field-grid"><div><label>Página</label><input data-content="'+item.id+'" data-field="page" value="'+esc(item.page)+'"></div><div><label>Secção</label><input data-content="'+item.id+'" data-field="section" value="'+esc(item.section)+'"></div></div><div class="field-row"><label>Campo</label><input data-content="'+item.id+'" data-field="field" value="'+esc(item.field)+'"></div><div class="field-row"><label>Texto</label><textarea data-content="'+item.id+'" data-field="value" rows="4">'+esc(item.value||'')+'</textarea></div><div class="card-actions"><button class="btn btn-primary" type="button" data-save-content="'+item.id+'">Guardar conteúdo</button><button class="btn btn-secondary" type="button" data-delete-content="'+item.id+'">Apagar</button></div></article>').join('')||'<p>Sem conteúdos encontrados.</p>';
+    list.innerHTML=data.map(item=>'<article class="cms-editor-card"><div class="editor-card-head"><div><span class="editor-kicker">'+esc(item.page)+' / '+esc(item.section)+'</span><h3>'+esc(item.field)+'</h3></div><small>Atualizado: '+fmtDate(item.updated_at)+'</small></div><div class="field-two cms-field-grid"><div><label>Página</label><input data-content="'+encodeURIComponent(item.page+'|'+item.section+'|'+item.field)+'" data-content-key="'+esc(item.page)+'|'+esc(item.section)+'|'+esc(item.field)+'" data-field="page" value="'+esc(item.page)+'"></div><div><label>Secção</label><input data-content="'+encodeURIComponent(item.page+'|'+item.section+'|'+item.field)+'" data-content-key="'+esc(item.page)+'|'+esc(item.section)+'|'+esc(item.field)+'" data-field="section" value="'+esc(item.section)+'"></div></div><div class="field-row"><label>Campo</label><input data-content="'+encodeURIComponent(item.page+'|'+item.section+'|'+item.field)+'" data-content-key="'+esc(item.page)+'|'+esc(item.section)+'|'+esc(item.field)+'" data-field="field" value="'+esc(item.field)+'"></div><div class="field-row"><label>Texto</label><textarea data-content="'+encodeURIComponent(item.page+'|'+item.section+'|'+item.field)+'" data-content-key="'+esc(item.page)+'|'+esc(item.section)+'|'+esc(item.field)+'" data-field="value" rows="4">'+esc(item.value||'')+'</textarea></div><div class="card-actions"><button class="btn btn-primary" type="button" data-save-content="'+encodeURIComponent(item.page+'|'+item.section+'|'+item.field)+'">Guardar conteúdo</button><button class="btn btn-secondary" type="button" data-delete-content="'+encodeURIComponent(item.page+'|'+item.section+'|'+item.field)+'">Apagar</button></div></article>').join('')||'<p>Sem conteúdos encontrados.</p>';
     bindContentEvents();
   }
 
@@ -381,7 +381,8 @@
     }));
     list.querySelectorAll('[data-delete-content]').forEach(button=>button.addEventListener('click',async()=>{
       if(!window.confirm('Apagar este conteúdo?'))return;
-      const result=await db().from('site_content').delete().eq('id',button.dataset.deleteContent);
+      const key=decodeURIComponent(button.dataset.deleteContent||'').split('|');
+      const result=await db().from('site_content').delete().eq('page',key[0]).eq('section',key[1]).eq('field',key[2]);
       if(result.error){msg('Não foi possível apagar o conteúdo.','error');return;}
       msg('Conteúdo removido.','success');
       await loadContent();
@@ -389,14 +390,14 @@
   }
 
   async function addContent(){
-    const result=await db().from('site_content').insert({page:'home',section:'novo',field:'novo_campo_'+Date.now(),value:'Novo conteúdo',updated_at:new Date().toISOString(),updated_by:window.currentAdminId});
+    const result=await db().from('site_content').insert({page:'home',section:'novo',field:'novo_campo_'+Date.now(),value:'Novo conteúdo',updated_at:new Date().toISOString()});
     if(result.error){msg('Não foi possível adicionar conteúdo.','error');return;}
     msg('Novo conteúdo criado.','success');
     await loadContent();
   }
 
   async function loadPayments(){
-    const result=await db().from('payment_methods').select('id,code,name,description,account_details,instructions,is_active,sort_order,updated_at').order('sort_order');
+    const result=await db().from('payment_methods').select('id,code,name,description,account_details,instructions,is_active,sort_order,created_at').order('sort_order');
     if(result.error){msg('Não foi possível carregar métodos de pagamento.','error');return;}
     cache.payments=result.data||[];
     renderPayments();
@@ -407,7 +408,7 @@
     if(!list)return;
     const data=filtered(cache.payments,filters.paymentsSearch,[x=>x.code,x=>x.name,x=>x.description,x=>x.account_details,x=>x.instructions]).filter(x=>!filters.paymentsActive||String(x.is_active)===filters.paymentsActive);
     const addCard='<article class="cms-editor-card payment-add-card"><div class="editor-card-head"><div><span class="editor-kicker">NOVO</span><h3>Adicionar ou atualizar método de pagamento</h3></div><span class="admin-chip chip-off">Não publicado</span></div><div class="field-two cms-field-grid"><div><label>Nome *</label><input id="new-payment-name" placeholder="Ex.: Transferência bancária"></div><div><label>Código *</label><input id="new-payment-code" placeholder="Ex.: transferencia"></div><div><label>Ordem</label><input id="new-payment-order" type="number" value="0" min="0" step="1"></div></div><div class="field-row"><label>Descrição</label><input id="new-payment-description" placeholder="Descrição apresentada ao cliente"></div><div class="field-row"><label>Dados de recebimento</label><textarea id="new-payment-account" rows="3" placeholder="IBAN, titular, conta ou outros dados necessários"></textarea></div><div class="field-row"><label>Instruções</label><textarea id="new-payment-instructions" rows="3" placeholder="Como o cliente deve efetuar e comprovar o pagamento"></textarea></div><div class="inline-action-row"><label class="checkbox-row"><input id="new-payment-active" type="checkbox" checked> Disponível no checkout</label><button class="btn btn-primary" type="button" data-add-payment>Guardar método</button></div></article>';
-    const cards=data.map(item=>'<article class="cms-editor-card"><div class="editor-card-head"><div><span class="editor-kicker">'+esc(item.code)+'</span><h3>'+esc(item.name)+'</h3></div><span class="admin-chip '+(item.is_active?'chip-on':'chip-off')+'">'+(item.is_active?'Ativo':'Inativo')+'</span></div><div class="field-two cms-field-grid"><div><label>Nome</label><input data-payment="'+item.id+'" data-field="name" value="'+esc(item.name)+'"></div><div><label>Código</label><input data-payment="'+item.id+'" data-field="code" value="'+esc(item.code)+'" readonly title="O código interno é fixo para não quebrar pedidos já existentes."></div><div><label>Ordem</label><input type="number" data-payment="'+item.id+'" data-field="sort_order" value="'+(item.sort_order??0)+'"></div></div><div class="field-row"><label>Descrição</label><input data-payment="'+item.id+'" data-field="description" value="'+esc(item.description||'')+'"></div><div class="field-row"><label>Dados de recebimento</label><textarea data-payment="'+item.id+'" data-field="account_details" rows="3">'+esc(item.account_details||'')+'</textarea></div><div class="field-row"><label>Instruções</label><textarea data-payment="'+item.id+'" data-field="instructions" rows="3">'+esc(item.instructions||'')+'</textarea></div><div class="inline-action-row"><label class="checkbox-row"><input type="checkbox" data-payment="'+item.id+'" data-field="is_active" '+(item.is_active?'checked':'')+'> Disponível no checkout</label><button class="btn btn-primary" type="button" data-save-payment="'+item.id+'">Guardar método</button></div></article>').join('');
+    const cards=data.map(item=>'<article class="cms-editor-card"><div class="editor-card-head"><div><span class="editor-kicker">'+esc(item.code)+'</span><h3>'+esc(item.name)+'</h3></div><span class="admin-chip '+(item.is_active?'chip-on':'chip-off')+'">'+(item.is_active?'Ativo':'Inativo')+'</span></div><div class="field-two cms-field-grid"><div><label>Nome</label><input data-payment="'+encodeURIComponent(item.page+'|'+item.section+'|'+item.field)+'" data-content-key="'+esc(item.page)+'|'+esc(item.section)+'|'+esc(item.field)+'" data-field="name" value="'+esc(item.name)+'"></div><div><label>Código</label><input data-payment="'+encodeURIComponent(item.page+'|'+item.section+'|'+item.field)+'" data-content-key="'+esc(item.page)+'|'+esc(item.section)+'|'+esc(item.field)+'" data-field="code" value="'+esc(item.code)+'" readonly title="O código interno é fixo para não quebrar pedidos já existentes."></div><div><label>Ordem</label><input type="number" data-payment="'+encodeURIComponent(item.page+'|'+item.section+'|'+item.field)+'" data-content-key="'+esc(item.page)+'|'+esc(item.section)+'|'+esc(item.field)+'" data-field="sort_order" value="'+(item.sort_order??0)+'"></div></div><div class="field-row"><label>Descrição</label><input data-payment="'+encodeURIComponent(item.page+'|'+item.section+'|'+item.field)+'" data-content-key="'+esc(item.page)+'|'+esc(item.section)+'|'+esc(item.field)+'" data-field="description" value="'+esc(item.description||'')+'"></div><div class="field-row"><label>Dados de recebimento</label><textarea data-payment="'+encodeURIComponent(item.page+'|'+item.section+'|'+item.field)+'" data-content-key="'+esc(item.page)+'|'+esc(item.section)+'|'+esc(item.field)+'" data-field="account_details" rows="3">'+esc(item.account_details||'')+'</textarea></div><div class="field-row"><label>Instruções</label><textarea data-payment="'+encodeURIComponent(item.page+'|'+item.section+'|'+item.field)+'" data-content-key="'+esc(item.page)+'|'+esc(item.section)+'|'+esc(item.field)+'" data-field="instructions" rows="3">'+esc(item.instructions||'')+'</textarea></div><div class="inline-action-row"><label class="checkbox-row"><input type="checkbox" data-payment="'+encodeURIComponent(item.page+'|'+item.section+'|'+item.field)+'" data-content-key="'+esc(item.page)+'|'+esc(item.section)+'|'+esc(item.field)+'" data-field="is_active" '+(item.is_active?'checked':'')+'> Disponível no checkout</label><button class="btn btn-primary" type="button" data-save-payment="'+item.id+'">Guardar método</button></div></article>').join('');
     list.innerHTML=addCard+(cards||'<p>Sem métodos encontrados.</p>');
     bindPaymentEvents();
   }
@@ -426,7 +427,7 @@
       if(!name||!code){msg('Preencha pelo menos o nome e o código do método.','error');return;}
       if(!Number.isFinite(sortOrder)||sortOrder<0){msg('A ordem deve ser um número igual ou superior a 0.','error');return;}
       const existing=cache.payments.find(item=>item.code===code);
-      const payload={code,name,description,account_details:accountDetails,instructions,is_active:isActive,sort_order:Math.trunc(sortOrder),updated_at:new Date().toISOString()};
+      const payload={code,name,description,account_details:accountDetails,instructions,is_active:isActive,sort_order:Math.trunc(sortOrder)};
       const result=existing
         ? await db().from('payment_methods').update(payload).eq('id',existing.id)
         : await db().from('payment_methods').insert(payload);
