@@ -4,7 +4,7 @@
     overviewSearch:'', overviewStatus:'',
     clientsSearch:'', clientsRole:'',
     ordersSearch:'', ordersStatus:'', ordersPayment:'',
-    servicesSearch:'', servicesCategory:'', servicesActive:'',
+    servicesSearch:'', servicesType:'', servicesCategory:'', servicesActive:'',
     mediaSearch:'', mediaType:'', mediaActive:'',
     contentSearch:'', contentPage:'', contentSection:'',
     paymentsSearch:'', paymentsActive:'', settingsSearch:''
@@ -137,7 +137,7 @@
   }
 
   async function loadServices(){
-    const result=await db().from('services').select('id,name,slug,category,description,image_url,features,unit_price,currency,is_active,sort_order,updated_at').order('sort_order',{ascending:true});
+    const result=await db().from('services').select('id,name,slug,category,description,image_url,features,unit_price,currency,is_active,sort_order,updated_at,item_type,sku,unit_label,stock_quantity,low_stock_threshold,is_featured').order('sort_order',{ascending:true});
     if(result.error){msg('Não foi possível carregar serviços.','error');return;}
     cache.services=result.data||[];
     fillServiceCategoryFilter();
@@ -147,6 +147,8 @@
   function fillServiceCategoryFilter(){
     const node=document.getElementById('services-category-filter');
     if(!node)return;
+    const typeNode=document.getElementById('services-type-filter');
+    if(typeNode) typeNode.value=filters.servicesType;
     const categories=[...new Set(cache.services.map(x=>x.category).filter(Boolean))].sort();
     node.innerHTML='<option value="">Todas as categorias</option>'+categories.map(x=>'<option value="'+esc(x)+'">'+esc(x)+'</option>').join('');
     node.value=filters.servicesCategory;
@@ -155,7 +157,8 @@
   function renderServices(){
     const list=document.getElementById('admin-services-list');
     if(!list)return;
-    const data=filtered(cache.services,filters.servicesSearch,[x=>x.name,x=>x.slug,x=>x.category,x=>x.description,x=>x.image_url])
+    const data=filtered(cache.services,filters.servicesSearch,[x=>x.name,x=>x.slug,x=>x.category,x=>x.description,x=>x.image_url,x=>x.sku])
+      .filter(x=>!filters.servicesType||x.item_type===filters.servicesType)
       .filter(x=>!filters.servicesCategory||x.category===filters.servicesCategory)
       .filter(x=>!filters.servicesActive||String(x.is_active)===filters.servicesActive);
     list.innerHTML=data.map(serviceEditor).join('')||'<p>Sem serviços encontrados.</p>';
@@ -164,12 +167,12 @@
 
   function serviceEditor(service){
     const features=Array.isArray(service.features)?service.features.join('\n'):'';
-    return '<article class="cms-editor-card"><div class="editor-card-head"><div><span class="editor-kicker">'+esc(service.category||'Serviço')+'</span><h3>'+esc(service.name)+'</h3></div><span class="admin-chip '+(service.is_active?'chip-on':'chip-off')+'">'+(service.is_active?'Ativo':'Inativo')+'</span></div>' +
-      '<div class="field-two cms-field-grid"><div><label>Nome</label><input data-service="'+service.id+'" data-field="name" value="'+esc(service.name)+'"></div><div><label>Categoria</label><input data-service="'+service.id+'" data-field="category" value="'+esc(service.category||'')+'"></div><div><label>Slug</label><input data-service="'+service.id+'" data-field="slug" value="'+esc(service.slug||'')+'"></div><div><label>Preço (AOA)</label><input type="number" min="0" step="0.01" data-service="'+service.id+'" data-field="unit_price" value="'+(service.unit_price??'')+'"></div><div><label>Moeda</label><input data-service="'+service.id+'" data-field="currency" value="'+esc(service.currency||'AOA')+'"></div><div><label>Ordem</label><input type="number" step="1" data-service="'+service.id+'" data-field="sort_order" value="'+(service.sort_order??0)+'"></div></div>' +
+    return '<article class="cms-editor-card"><div class="editor-card-head"><div><span class="editor-kicker">'+esc(service.item_type==='material'?'Material':(service.category||'Serviço'))+'</span><h3>'+esc(service.name)+'</h3></div><span class="admin-chip '+(service.is_active?'chip-on':'chip-off')+'">'+(service.is_active?'Ativo':'Inativo')+'</span></div>' +
+      '<div class="field-two cms-field-grid"><div><label>Tipo</label><select data-service="'+service.id+'" data-field="item_type"><option value="service" '+(service.item_type!=='material'?'selected':'')+'>Serviço</option><option value="material" '+(service.item_type==='material'?'selected':'')+'>Material</option></select></div><div><label>Nome</label><input data-service="'+service.id+'" data-field="name" value="'+esc(service.name)+'"></div><div><label>Categoria</label><input data-service="'+service.id+'" data-field="category" value="'+esc(service.category||'')+'"></div><div><label>SKU / Referência</label><input data-service="'+service.id+'" data-field="sku" value="'+esc(service.sku||'')+'"></div><div><label>Slug</label><input data-service="'+service.id+'" data-field="slug" value="'+esc(service.slug||'')+'"></div><div><label>Preço (AOA)</label><input type="number" min="0" step="0.01" data-service="'+service.id+'" data-field="unit_price" value="'+(service.unit_price??'')+'"></div><div><label>Moeda</label><input data-service="'+service.id+'" data-field="currency" value="'+esc(service.currency||'AOA')+'"></div><div><label>Unidade de venda</label><input data-service="'+service.id+'" data-field="unit_label" value="'+esc(service.unit_label||'unidade')+'" placeholder="unidade, caixa, metro, resma..."></div><div><label>Stock disponível</label><input type="number" min="0" step="0.01" data-service="'+service.id+'" data-field="stock_quantity" value="'+(service.stock_quantity??'')+'" placeholder="Vazio = não controlar"></div><div><label>Alerta de stock baixo</label><input type="number" min="0" step="0.01" data-service="'+service.id+'" data-field="low_stock_threshold" value="'+(service.low_stock_threshold??0)+'"></div><div><label>Ordem</label><input type="number" step="1" data-service="'+service.id+'" data-field="sort_order" value="'+(service.sort_order??0)+'"></div></div>' +
       '<div class="field-row"><label>Descrição</label><textarea data-service="'+service.id+'" data-field="description" rows="3">'+esc(service.description||'')+'</textarea></div>' +
       '<div class="field-row"><label>Imagem (caminho ou URL)</label><input data-service="'+service.id+'" data-field="image_url" value="'+esc(service.image_url||'')+'"></div>' +
       '<div class="field-row"><label>Características (uma por linha)</label><textarea data-service="'+service.id+'" data-field="features" rows="3">'+esc(features)+'</textarea></div>' +
-      '<div class="inline-action-row"><label class="checkbox-row"><input type="checkbox" data-service="'+service.id+'" data-field="is_active" '+(service.is_active?'checked':'')+'> Publicado no site</label><button class="btn btn-primary" type="button" data-save-service="'+service.id+'">Guardar serviço</button></div></article>';
+      '<div class="inline-action-row"><label class="checkbox-row"><input type="checkbox" data-service="'+service.id+'" data-field="is_featured" '+(service.is_featured?'checked':'')+'> Destaque</label><label class="checkbox-row"><input type="checkbox" data-service="'+service.id+'" data-field="is_active" '+(service.is_active?'checked':'')+'> Publicado no catálogo</label><button class="btn btn-primary" type="button" data-save-service="'+service.id+'">Guardar item</button></div></article>';
   }
 
   function bindServiceEvents(){
@@ -180,9 +183,9 @@
       list.querySelectorAll('[data-service="'+id+'"]').forEach(field=>{
         const name=field.dataset.field;
         if(name==='features')patch[name]=field.value.split('\n').map(v=>v.trim()).filter(Boolean);
-        else if(name==='unit_price')patch[name]=field.value===''?null:Number(field.value);
+        else if(['unit_price','stock_quantity','low_stock_threshold'].includes(name))patch[name]=field.value===''?null:Number(field.value);
         else if(name==='sort_order')patch[name]=Number(field.value||0);
-        else if(name==='is_active')patch[name]=field.checked;
+        else if(['is_active','is_featured'].includes(name))patch[name]=field.checked;
         else patch[name]=field.value.trim();
       });
       const result=await db().from('services').update(patch).eq('id',id);
@@ -193,7 +196,7 @@
   }
 
   async function addService(){
-    const result=await db().from('services').insert({name:'Novo serviço',slug:'novo-servico-'+Date.now(),category:'Nova categoria',description:'Descrição do serviço.',image_url:'',features:[],unit_price:null,currency:'AOA',is_active:false,sort_order:cache.services.length+1});
+    const result=await db().from('services').insert({name:'Novo item',slug:'novo-item-'+Date.now(),category:'Nova categoria',description:'Descrição do item.',image_url:'',features:[],unit_price:null,currency:'AOA',item_type:'service',sku:null,unit_label:'unidade',stock_quantity:null,low_stock_threshold:0,is_featured:false,is_active:false,sort_order:cache.services.length+1});
     if(result.error){msg('Não foi possível adicionar o serviço.','error');return;}
     msg('Serviço criado. Edite os campos e guarde.','success');
     await loadServices();
@@ -476,6 +479,7 @@
     add('orders-status-filter','ordersStatus','change',renderOrders);
     add('orders-payment-filter','ordersPayment','change',renderOrders);
     add('services-search','servicesSearch','input',renderServices);
+    add('services-type-filter','servicesType','change',renderServices);
     add('services-category-filter','servicesCategory','change',renderServices);
     add('services-active-filter','servicesActive','change',renderServices);
     add('media-search','mediaSearch','input',renderMedia);
