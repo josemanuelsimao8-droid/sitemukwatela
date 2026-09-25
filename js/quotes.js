@@ -42,6 +42,13 @@
     const r=await db().rpc('customer_respond_quote',{p_quote_id:id,p_accept:accept});
     if(r.error){show('Não foi possível atualizar o orçamento.','error');return;}
     show(accept?'Orçamento aceite. A Proforma está agora disponível.':'Orçamento recusado.','success');
+    if (accept) {
+      const quote = rows.find(item => item.id === id);
+      if (quote?.order_id) {
+        setTimeout(() => { window.location.href = 'pedido.html?order=' + encodeURIComponent(quote.order_id); }, 700);
+        return;
+      }
+    }
     await load();
   }
 
