@@ -7,6 +7,44 @@
     return result.data?.session || null;
   }
 
+  async function getAppRole(userId) {
+    if (!userId) return 'customer';
+
+    const roleResult = await client()
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', userId)
+      .maybeSingle();
+
+    if (!roleResult.error && roleResult.data?.role) {
+      return roleResult.data.role;
+    }
+
+    const profileResult = await client()
+      .from('profiles')
+      .select('role')
+      .eq('id', userId)
+      .maybeSingle();
+
+    return profileResult.data?.role || 'customer';
+  }
+
+  async function requireCustomer() {
+    const session = await getSession();
+    if (!session) {
+      window.location.href = 'auth.html';
+      return null;
+    }
+
+    const role = await getAppRole(session.user.id);
+    if (role === 'admin') {
+      window.location.href = 'admin.html';
+      return null;
+    }
+
+    return session;
+  }
+
   function showMessage(text, type) {
     const node = document.getElementById('shop-message') || document.getElementById('auth-message');
     if (!node) return;
@@ -58,6 +96,7 @@
     }
 
     const currentSession = await getSession();
+    const currentRole = currentSession ? await getAppRole(currentSession.user.id) : 'guest';
     list.innerHTML = '';
 
     services.forEach((service) => {
@@ -104,11 +143,18 @@
       const button = document.createElement('button');
       button.type = 'button';
       button.className = 'btn btn-primary';
-      button.textContent = service.unit_price === null ? 'Solicitar serviço' : 'Comprar serviço';
-      button.addEventListener('click', () => {
-        selectService(service);
-        window.location.href = currentSession ? 'checkout.html' : 'auth.html';
-      });
+      if (currentRole === 'admin') {
+        button.textContent = 'Gerir no painel';
+        button.addEventListener('click', () => {
+          window.location.href = 'admin.html';
+        });
+      } else {
+        button.textContent = service.unit_price === null ? 'Solicitar serviço' : 'Comprar serviço';
+        button.addEventListener('click', () => {
+          selectService(service);
+          window.location.href = currentSession ? 'checkout.html' : 'auth.html';
+        });
+      }
 
       footer.append(price, button);
       body.append(category, title, description, features, footer);
@@ -122,10 +168,8 @@
     const summary = document.getElementById('checkout-service-summary');
     if (!form || !summary) return;
 
-    if (!await getSession()) {
-      window.location.href = 'auth.html';
-      return;
-    }
+    const session = await requireCustomer();
+    if (!session) return;
 
     const selectedId = sessionStorage.getItem('mukwatela-selected-service-id');
     const service = selectedId ? await fetchService(selectedId).catch((error) => {
@@ -135,7 +179,7 @@
 
     const profileResult = await client().from('profiles')
       .select('full_name')
-      .eq('id', (await getSession()).user.id)
+      .eq('id', session.user.id)
       .maybeSingle();
     const clientName = document.getElementById('checkout-name');
     if (clientName) clientName.value = profileResult.data?.full_name || '';
@@ -279,10 +323,7 @@
   async function loadOrders() {
     const body = document.getElementById('orders-table-body');
     if (!body) return;
-    if (!await getSession()) {
-      window.location.href = 'auth.html';
-      return;
-    }
+    if (!await requireCustomer()) return;
 
     const result = await client().from('orders')
       .select('id,order_number,status,total,currency,payment_method,payment_status,created_at,order_items(service_name,quantity)')
@@ -324,10 +365,7 @@
 
   async function loadDashboard() {
     if (!document.getElementById('sum-orders')) return;
-    if (!await getSession()) {
-      window.location.href = 'auth.html';
-      return;
-    }
+    if (!await requireCustomer()) return;
 
     const ordersResult = await client().from('orders')
       .select('id,status,payment_status,created_at,order_items(quantity)');
@@ -372,10 +410,7 @@
   async function loadNotifications() {
     const list = document.getElementById('all-notifications');
     if (!list) return;
-    if (!await getSession()) {
-      window.location.href = 'auth.html';
-      return;
-    }
+    if (!await requireCustomer()) return;
 
     const result = await client().from('notifications')
       .select('id,title,message,is_read,created_at')
@@ -396,10 +431,7 @@
   async function loadConfirmation() {
     const summary = document.getElementById('success-summary');
     if (!summary) return;
-    if (!await getSession()) {
-      window.location.href = 'auth.html';
-      return;
-    }
+    if (!await requireCustomer()) return;
 
     const orderId = sessionStorage.getItem('mukwatela-last-order-id');
     if (!orderId) {
