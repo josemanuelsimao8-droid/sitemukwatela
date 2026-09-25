@@ -310,7 +310,7 @@
     if (!await requireCustomer()) return;
 
     const result = await client().from('orders')
-      .select('id,order_number,status,total,currency,payment_method,payment_status,created_at,order_items(service_name,quantity)')
+      .select('id,order_number,status,total,currency,payment_method,payment_status,created_at,order_items(service_name,quantity,item_type,unit_label)')
       .order('created_at', { ascending: false });
 
     if (result.error) {
@@ -330,7 +330,7 @@
       const amount = order.total === null ? 'Sob orçamento' : money(order.total, order.currency);
       return '<tr>' +
         '<td>' + order.order_number + '</td>' +
-        '<td>' + (item?.service_name || 'Serviço') + '</td>' +
+        '<td><span class="order-item-type">' + (item?.item_type === 'material' ? 'Material' : 'Serviço') + '</span> ' + (item?.service_name || 'Item') + '</td>' +
         '<td>' + new Date(order.created_at).toLocaleDateString('pt-PT') + '</td>' +
         '<td>' + amount + '</td>' +
         '<td><span class="status-pill payment-status-table payment-status-table-' + (order.payment_status || 'unpaid') + '">' + paymentStatusLabel(order.payment_status) + '</span></td>' +
@@ -373,7 +373,7 @@
     if (!await requireCustomer()) return;
 
     const ordersResult = await client().from('orders')
-      .select('id,status,payment_status,created_at,order_items(quantity)');
+      .select('id,status,payment_status,created_at,order_items(quantity,item_type)');
     const notesResult = await client().from('notifications')
       .select('id,title,message,is_read,created_at')
       .order('created_at', { ascending: false })
@@ -385,13 +385,13 @@
     const orders = ordersResult.data || [];
     const notes = notesResult.data || [];
     subscribeCustomerNotifications(currentUserId || '');
-    const serviceCount = orders.reduce((sum, order) =>
+    const itemCount = orders.reduce((sum, order) =>
       sum + (order.order_items || []).reduce((sub, item) => sub + Number(item.quantity || 0), 0), 0
     );
     const quoteCount = orders.filter((order) => order.status === 'pending_quote').length;
     const confirmedPayments = orders.filter((order) => order.payment_status === 'confirmed').length;
 
-    document.getElementById('sum-services')?.replaceChildren(document.createTextNode(String(serviceCount)));
+    document.getElementById('sum-services')?.replaceChildren(document.createTextNode(String(itemCount)));
     document.getElementById('sum-orders')?.replaceChildren(document.createTextNode(String(orders.length)));
     document.getElementById('sum-payments')?.replaceChildren(document.createTextNode(String(confirmedPayments)));
     document.getElementById('sum-budgets')?.replaceChildren(document.createTextNode(String(quoteCount)));
@@ -446,7 +446,7 @@
     }
 
     const result = await client().from('orders')
-      .select('id,order_number,status,total,currency,payment_method,payment_status,created_at,order_items(service_name,quantity)')
+      .select('id,order_number,status,total,currency,payment_method,payment_status,created_at,order_items(service_name,quantity,item_type,unit_label)')
       .eq('id', orderId)
       .maybeSingle();
 
@@ -459,7 +459,7 @@
     const item = order.order_items?.[0];
     summary.innerHTML =
       '<div class="summary-row"><span>Número do pedido</span><strong>' + order.order_number + '</strong></div>' +
-      '<div class="summary-row"><span>Serviço</span><strong>' + (item?.service_name || 'Serviço') + '</strong></div>' +
+      '<div class="summary-row"><span>' + (item?.item_type === 'material' ? 'Material' : 'Serviço') + '</span><strong>' + (item?.service_name || 'Item') + '</strong></div>' +
       '<div class="summary-row"><span>Quantidade</span><strong>' + (item?.quantity || 1) + '</strong></div>' +
       '<div class="summary-row"><span>Data</span><strong>' + new Date(order.created_at).toLocaleDateString('pt-PT') + '</strong></div>' +
       '<div class="summary-row"><span>Valor</span><strong>' + (order.total === null ? 'Sob orçamento' : money(order.total, order.currency)) + '</strong></div>' +
