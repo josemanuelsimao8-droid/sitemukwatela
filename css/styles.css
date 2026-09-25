@@ -1930,3 +1930,97 @@ input:focus, textarea:focus, select:focus { border-color: #e7ae24; box-shadow: 0
 .dashboard-user-email,.dashboard-user-role{display:block;margin-top:2px;font-size:.78rem;font-weight:500;color:#64748b}
 .dashboard-user-role{font-weight:700}
 #profile-email[readonly]{background:#f8fafc;cursor:not-allowed}
+
+
+/* Stage 3: real service catalog */
+.services-catalog-grid{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:24px;
+}
+.service-catalog-card{
+  display:grid;
+  grid-template-columns:180px 1fr;
+  min-height:240px;
+  overflow:hidden;
+  background:#fff;
+  border:1px solid var(--line);
+}
+.service-catalog-media{
+  min-height:240px;
+  background:#f2f2f2;
+}
+.service-catalog-media img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  display:block;
+}
+.service-catalog-body{
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+  padding:24px;
+}
+.service-catalog-body h2{
+  margin:0;
+  font-size:1.25rem;
+}
+.service-catalog-body p{
+  margin:0;
+  color:var(--muted);
+  line-height:1.6;
+}
+.service-feature-list{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+  margin-top:2px;
+}
+.service-feature-list span{
+  padding:6px 9px;
+  border:1px solid var(--line);
+  font-size:.72rem;
+  font-weight:700;
+}
+.service-catalog-footer{
+  margin-top:auto;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:14px;
+  padding-top:14px;
+  border-top:1px solid var(--line);
+}
+.service-catalog-footer strong{
+  font-size:.95rem;
+}
+.checkout-service-box{
+  display:grid;
+  grid-template-columns:150px 1fr;
+  gap:20px;
+  align-items:start;
+  padding:16px;
+  border:1px solid var(--line);
+  background:#fff;
+}
+.checkout-service-box img{
+  width:150px;
+  height:120px;
+  object-fit:cover;
+  background:#f2f2f2;
+}
+.checkout-service-box h3{margin:0 0 8px}
+.checkout-service-box p{margin:0 0 10px;color:var(--muted);line-height:1.55}
+.notification-list li strong,
+.notification-list li span,
+.notification-list li small{
+  display:block;
+}
+@media (max-width: 860px){
+  .services-catalog-grid{grid-template-columns:1fr}
+  .service-catalog-card{grid-template-columns:1fr}
+  .service-catalog-media{height:220px;min-height:220px}
+  .checkout-service-box{grid-template-columns:1fr}
+  .checkout-service-box img{width:100%;height:220px}
+}
