@@ -133,6 +133,13 @@
       return null;
     }) : null;
 
+    const profileResult = await client().from('profiles')
+      .select('full_name')
+      .eq('id', (await getSession()).user.id)
+      .maybeSingle();
+    const clientName = document.getElementById('checkout-name');
+    if (clientName) clientName.value = profileResult.data?.full_name || '';
+
     if (!service) {
       summary.innerHTML = '<p>Selecione um serviço na área de Serviços para continuar.</p>';
       form.hidden = true;
