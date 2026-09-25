@@ -17,9 +17,9 @@
     if (!userId) return 'customer';
 
     const roleResult = await client()
-      .from('user_roles')
+      .from('profiles')
       .select('role')
-      .eq('user_id', userId)
+      .eq('id', userId)
       .maybeSingle();
 
     if (!roleResult.error && roleResult.data?.role) {
