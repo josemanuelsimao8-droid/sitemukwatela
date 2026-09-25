@@ -80,10 +80,10 @@
 
     let query = client().from('services')
       .select('id,name,slug,category,description,image_url,features,unit_price,currency,is_active,sort_order,item_type,sku,unit_label,stock_quantity,is_featured')
-      .eq('is_active', true);
-    if (document.body.dataset.page === 'services') query = query.eq('item_type', 'service');
-    const result = await query.order('sort_order', { ascending: true });
+      .eq('is_active', true)
+      .eq('item_type', 'service');
 
+    const result = await query.order('sort_order', { ascending: true });
     if (result.error) {
       console.error(result.error);
       list.innerHTML = '<p>Não foi possível carregar os serviços neste momento.</p>';
@@ -91,79 +91,77 @@
     }
 
     const services = result.data || [];
-    if (!services.length) {
-      list.innerHTML = '<p>Não existem serviços disponíveis neste momento.</p>';
-      return;
+    const searchNode = document.getElementById('catalog-search');
+    const categoryNode = document.getElementById('catalog-category');
+    const sortNode = document.getElementById('catalog-sort');
+
+    if (categoryNode) {
+      const categories = [...new Set(services.map((x) => x.category).filter(Boolean))].sort();
+      categoryNode.innerHTML = '<option value="">Todas as categorias</option>' +
+        categories.map((x) => '<option value="' + String(x).replace(/"/g,'&quot;') + '">' + x + '</option>').join('');
     }
 
     const currentSession = await getSession();
     const currentRole = currentSession ? await getAppRole(currentSession.user.id) : 'guest';
-    list.innerHTML = '';
 
-    services.forEach((service) => {
-      const card = document.createElement('article');
-      card.className = 'service-catalog-card';
+    const moneyLocal = (value, currency) => value === null || value === undefined || value === ''
+      ? 'Sob orçamento'
+      : String(currency || 'AOA') + ' ' + Number(value).toLocaleString('pt-PT', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
-      const media = document.createElement('div');
-      media.className = 'service-catalog-media';
-      if (service.image_url) {
-        const img = document.createElement('img');
-        img.src = encodeURI(service.image_url);
-        img.alt = service.name;
-        img.loading = 'lazy';
-        media.appendChild(img);
-      }
-
-      const body = document.createElement('div');
-      body.className = 'service-catalog-body';
-
-      const category = document.createElement('span');
-      category.className = 'eyebrow';
-      category.textContent = service.item_type === 'material' ? 'Material' : (service.category || 'Serviço');
-
-      const title = document.createElement('h2');
-      title.textContent = service.name;
-
-      const description = document.createElement('p');
-      description.textContent = service.description || '';
-
-      const features = document.createElement('div');
-      features.className = 'service-feature-list';
-      (Array.isArray(service.features) ? service.features : []).forEach((item) => {
-        const tag = document.createElement('span');
-        tag.textContent = item;
-        features.appendChild(tag);
+    function render() {
+      const term = String(searchNode?.value || '').trim().toLowerCase();
+      const category = categoryNode?.value || '';
+      let data = services.filter((service) => {
+        const haystack = [service.name, service.slug, service.category, service.description, service.sku].join(' ').toLowerCase();
+        return (!term || haystack.includes(term)) && (!category || service.category === category);
       });
 
-      const footer = document.createElement('div');
-      footer.className = 'service-catalog-footer';
+      if (sortNode?.value === 'price_asc') data.sort((a,b) => Number(a.unit_price ?? Infinity) - Number(b.unit_price ?? Infinity));
+      if (sortNode?.value === 'price_desc') data.sort((a,b) => Number(b.unit_price ?? -1) - Number(a.unit_price ?? -1));
+      if (sortNode?.value === 'name') data.sort((a,b) => String(a.name).localeCompare(String(b.name), 'pt'));
 
-      const price = document.createElement('strong');
-      price.textContent = service.unit_price === null ? money(service.unit_price, service.currency) : money(service.unit_price, service.currency) + ' / ' + (service.unit_label || 'unidade');
-
-      const button = document.createElement('button');
-      button.type = 'button';
-      button.className = 'btn btn-primary';
-      if (currentRole === 'admin') {
-        button.textContent = 'Gerir no painel';
-        button.addEventListener('click', () => {
-          window.location.href = 'admin.html';
-        });
-      } else {
-        button.textContent = service.item_type === 'material'
-          ? (service.unit_price === null ? 'Solicitar material' : 'Comprar material')
-          : (service.unit_price === null ? 'Solicitar serviço' : 'Comprar serviço');
-        button.addEventListener('click', () => {
-          selectService(service);
-          window.location.href = currentSession ? 'checkout.html' : 'auth.html';
-        });
+      if (!data.length) {
+        list.innerHTML = '<div class="operations-empty">Nenhum serviço corresponde aos filtros.</div>';
+        return;
       }
 
-      footer.append(price, button);
-      body.append(category, title, description, features, footer);
-      card.append(media, body);
-      list.appendChild(card);
-    });
+      list.innerHTML = data.map((service) => {
+        const features = Array.isArray(service.features)
+          ? service.features.map((item) => '<span>' + item + '</span>').join('')
+          : '';
+        const stock = service.item_type === 'material' && service.stock_quantity != null
+          ? '<small class="catalog-stock">' + Number(service.stock_quantity).toLocaleString('pt-PT') + ' ' + (service.unit_label || 'unidade') + ' disponíveis</small>'
+          : '';
+        const action = currentRole === 'admin'
+          ? '<a class="btn btn-primary" href="admin.html">Gerir no painel</a>'
+          : '<button class="btn btn-primary" type="button" data-add-cart="' + service.id + '">Adicionar ao carrinho</button>';
+        return '<article class="service-catalog-card">' +
+          '<a class="service-catalog-media" href="produto.html?id=' + encodeURIComponent(service.id) + '" aria-label="Ver ' + service.name + '">' +
+            (service.image_url ? '<img src="' + encodeURI(service.image_url) + '" alt="' + service.name + '" loading="lazy">' : '') +
+          '</a>' +
+          '<div class="service-catalog-body">' +
+            '<span class="eyebrow">' + (service.category || 'Serviço') + '</span>' +
+            '<h2>' + service.name + '</h2><p>' + (service.description || '') + '</p>' +
+            '<div class="service-feature-list">' + features + '</div>' +
+            '<div class="service-catalog-footer"><div><strong>' + moneyLocal(service.unit_price, service.currency) + '</strong>' +
+              (service.unit_price != null ? '<small>/ ' + (service.unit_label || 'unidade') + '</small>' : '') + stock +
+            '</div><div class="catalog-card-actions">' + action +
+              '<a class="catalog-detail-link" href="produto.html?id=' + encodeURIComponent(service.id) + '">Detalhes</a></div></div>' +
+          '</div></article>';
+      }).join('');
+
+      list.querySelectorAll('[data-add-cart]').forEach((button) => button.addEventListener('click', () => {
+        const service = services.find((x) => x.id === button.dataset.addCart);
+        if (!service || !window.MukwatelaCart) return;
+        window.MukwatelaCart.add(service, 1, {});
+        showMessage('Serviço adicionado ao carrinho.', 'success');
+      }));
+    }
+
+    searchNode?.addEventListener('input', render);
+    categoryNode?.addEventListener('change', render);
+    sortNode?.addEventListener('change', render);
+    render();
   }
 
   async function initCheckout() {
