@@ -42,8 +42,17 @@
   async function loadPaymentMethods(){
     const r=await db().from('payment_methods').select('id,code,name,description,account_details,instructions,is_active,sort_order').eq('is_active',true).order('sort_order',{ascending:true});if(r.error)throw r.error;methods=r.data||[];
     const list=document.getElementById('payment-method-list');if(!list)return;
+    const submit=document.querySelector('#checkout-form button[type="submit"]');
+    if(!methods.length){
+      list.innerHTML='<div class="payment-method-empty"><strong>Nenhum método de pagamento está disponível.</strong><p>O administrador precisa ativar pelo menos um método para este pedido avançar.</p></div>';
+      if(submit && !hasQuote){submit.disabled=true;}
+      return false;
+    }
     list.innerHTML=methods.map((m,i)=>'<label class="payment-method-option"><input type="radio" name="paymentMethod" value="'+esc(m.code)+'" '+(i===0?'checked':'')+'><span><strong>'+esc(m.name)+'</strong><small>'+esc(m.description||'')+'</small></span></label>').join('');
-    list.addEventListener('change',renderPaymentInstructions);renderPaymentInstructions();
+    if(submit && !hasQuote){submit.disabled=false;}
+    list.addEventListener('change',renderPaymentInstructions);
+    renderPaymentInstructions();
+    return true;
   }
   function renderPaymentInstructions(){const node=document.getElementById('payment-instructions'),value=document.querySelector('input[name="paymentMethod"]:checked')?.value,m=methods.find(x=>x.code===value);if(!node||!m)return;node.innerHTML='<strong>'+esc(m.name)+'</strong>'+(m.account_details?'<p>'+esc(m.account_details)+'</p>':'')+(m.instructions?'<p>'+esc(m.instructions)+'</p>':'');}
   async function loadZones(){
@@ -71,7 +80,18 @@
     const session=await getSession();if(!session){location.href='auth.html';return;}
     catalog=await loadCatalog();if(!catalog.length){message('O carrinho está vazio.','error');form.hidden=true;return;}
     renderSummary(catalog);await loadProfile(session);
-    try{await Promise.all([loadPaymentMethods(),loadZones()]);}catch(e){console.error(e);message('Não foi possível carregar as opções de pagamento ou entrega.','error');}
+    try{
+      const paymentLoaded=await loadPaymentMethods();
+      await loadZones();
+      if(paymentLoaded===false && !hasQuote){
+        message('Não há nenhum método de pagamento ativo. O pedido não pode avançar até que a Mukwatela disponibilize um método.','error');
+      }
+    }catch(e){
+      console.error(e);
+      message('Não foi possível carregar as opções de pagamento ou entrega.','error');
+      const submit=document.querySelector('#checkout-form button[type="submit"]');
+      if(submit && !hasQuote) submit.disabled=true;
+    }
     document.getElementById('delivery-method')?.addEventListener('change',updateTotals);document.getElementById('delivery-zone')?.addEventListener('change',updateTotals);
     updateTotals();
     form.addEventListener('submit',e=>{e.preventDefault();submit(form).catch(err=>{console.error(err);message('Ocorreu um erro ao processar o pedido.','error');const b=form.querySelector('button[type="submit"]');if(b){b.disabled=false;b.textContent=hasQuote?'ENVIAR PARA ORÇAMENTO':'CONTINUAR PARA PAGAMENTO';}});});
