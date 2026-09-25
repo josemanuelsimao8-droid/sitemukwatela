@@ -2253,3 +2253,22 @@ input:focus, textarea:focus, select:focus { border-color: #e7ae24; box-shadow: 0
   .admin-toolbar.compact { max-width: none; }
   .admin-live-status { display: flex; }
 }
+
+
+.media-upload-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin: -2px 0 14px;
+}
+.media-upload-row input[type="file"] {
+  flex: 1 1 260px;
+  min-height: 42px;
+  padding: 8px 10px;
+}
+@media (max-width: 720px) {
+  .media-upload-row { align-items: stretch; }
+  .media-upload-row input[type="file"],
+  .media-upload-row .btn { width: 100%; }
+}
