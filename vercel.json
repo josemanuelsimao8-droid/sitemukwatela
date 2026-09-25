@@ -24,6 +24,19 @@
           "value": "max-age=31536000; includeSubDomains"
         }
       ]
+    },
+    {
+      "source": "/admin.html|/admin-pedido.html|/admin-cliente.html|/dashboard.html|/compras.html|/notificacoes.html|/perfil.html|/orcamentos.html|/documentos.html|/documento.html|/pedido.html|/pedido-confirmado.html|/carrinho.html|/checkout.html|/pagamento.html",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-store, max-age=0"
+        },
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow, noarchive"
+        }
+      ]
     }
   ]
 }
