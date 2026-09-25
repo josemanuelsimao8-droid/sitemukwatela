@@ -45,7 +45,7 @@
       <div class="checkout-form-panel">
         <div class="panel-card checkout-panel">
           <span class="eyebrow">Pedido</span>
-          <h2>Detalhes do pedido</h2>
+          <h2>Detalhes do pedido</h2><p id="checkout-item-type" class="admin-section-note">Configure os detalhes do artigo antes de continuar.</p>
           <div id="shop-message" class="auth-message" hidden aria-live="polite"></div>
           <form id="checkout-form" class="checkout-form">
             <div class="field-row field-two">
@@ -59,7 +59,7 @@
               </div>
             </div>
 
-            <div class="field-row field-two">
+            <div class="field-row field-two" data-service-only>
               <div>
                 <label for="service-format">Formato</label>
                 <select id="service-format">
@@ -74,7 +74,7 @@
               </div>
             </div>
 
-            <div class="field-row field-two">
+            <div class="field-row field-two" data-service-only>
               <div>
                 <label for="service-dimensions">Dimensões</label>
                 <input id="service-dimensions" type="text" placeholder="Ex.: A4">
