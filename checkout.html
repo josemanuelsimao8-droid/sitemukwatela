@@ -9,6 +9,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="./css/styles.css">
+  <link rel="stylesheet" href="./css/payments.css">
 </head>
 <body data-page="checkout">
   <header class="site-header" id="top">
@@ -93,11 +94,16 @@
               <div><span>Total previsto</span><strong id="checkout-total">Valor em AOA — sob orçamento</strong></div>
             </div>
 
-            <h3 class="checkout-subtitle">Método de pagamento</h3>
-            <div id="payment-method-list" class="payment-method-list"></div>
-            <div id="payment-instructions" class="payment-instructions" aria-live="polite"></div>
+            <div class="checkout-payment-stage">
+              <div>
+                <span class="eyebrow">Forma de pagamento</span>
+                <h3 class="checkout-subtitle">Escolha como pretende pagar</h3>
+              </div>
+              <div id="payment-method-list" class="payment-method-list"></div>
+              <div id="payment-instructions" class="payment-instructions" aria-live="polite"></div>
+            </div>
 
-            <button class="btn btn-primary btn-block" type="submit">CONFIRMAR PEDIDO</button>
+            <button class="btn btn-primary btn-block" type="submit">CONTINUAR PARA PAGAMENTO</button>
           </form>
         </div>
       </div>
@@ -108,6 +114,7 @@
   <script src="./js/supabase.js"></script>
   <script src="./js/auth.js"></script>
   <script src="./js/shop.js"></script>
+  <script src="./js/checkout-payment.js"></script>
   <script src="./js/company.js"></script>
   <script src="./js/main.js"></script>
 </body>
