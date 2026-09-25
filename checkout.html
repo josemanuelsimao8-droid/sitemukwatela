@@ -90,6 +90,30 @@
               <textarea id="service-observations" rows="5" placeholder="Descreva o que precisa para a Mukwatela preparar o pedido."></textarea>
             </div>
 
+            <div class="checkout-delivery-box">
+              <div>
+                <span class="eyebrow">Entrega / levantamento</span>
+                <h3 class="checkout-subtitle">Como pretende receber?</h3>
+              </div>
+              <div class="field-row field-two">
+                <div>
+                  <label for="delivery-method">Método</label>
+                  <select id="delivery-method">
+                    <option value="pickup">Levantamento na Mukwatela</option>
+                    <option value="delivery">Entrega</option>
+                  </select>
+                </div>
+                <div>
+                  <label for="delivery-contact">Contacto</label>
+                  <input id="delivery-contact" type="tel" placeholder="Telefone para contacto">
+                </div>
+              </div>
+              <div class="field-row">
+                <label for="delivery-address">Morada de entrega</label>
+                <textarea id="delivery-address" rows="3" placeholder="Preencha apenas quando escolher Entrega."></textarea>
+              </div>
+            </div>
+
             <div class="checkout-price-list">
               <div><span>Total previsto</span><strong id="checkout-total">Valor em AOA — sob orçamento</strong></div>
             </div>
@@ -113,7 +137,6 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="./js/supabase.js"></script>
   <script src="./js/auth.js"></script>
-  <script src="./js/shop.js"></script>
   <script src="./js/checkout-payment.js"></script>
   <script src="./js/company.js"></script>
   <script src="./js/main.js"></script>
