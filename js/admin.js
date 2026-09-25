@@ -161,7 +161,7 @@
       .filter(x=>!filters.servicesType||x.item_type===filters.servicesType)
       .filter(x=>!filters.servicesCategory||x.category===filters.servicesCategory)
       .filter(x=>!filters.servicesActive||String(x.is_active)===filters.servicesActive);
-    list.innerHTML=data.map(serviceEditor).join('')||'<p>Sem serviços encontrados.</p>';
+    list.innerHTML=data.map(serviceEditor).join('')||'<p>Sem itens encontrados.</p>';
     bindServiceEvents();
   }
 
@@ -189,16 +189,16 @@
         else patch[name]=field.value.trim();
       });
       const result=await db().from('services').update(patch).eq('id',id);
-      if(result.error){msg('Não foi possível guardar o serviço.','error');return;}
-      msg('Serviço atualizado. O site será atualizado em tempo real.','success');
+      if(result.error){msg(result.error.code==='23505'?'A referência/SKU deste item já existe. Use outra.':'Não foi possível guardar o item.','error');return;}
+      msg('Item atualizado. O catálogo será atualizado em tempo real.','success');
       await loadServices();
     }));
   }
 
   async function addService(){
     const result=await db().from('services').insert({name:'Novo item',slug:'novo-item-'+Date.now(),category:'Nova categoria',description:'Descrição do item.',image_url:'',features:[],unit_price:null,currency:'AOA',item_type:'service',sku:null,unit_label:'unidade',stock_quantity:null,low_stock_threshold:0,is_featured:false,is_active:false,sort_order:cache.services.length+1});
-    if(result.error){msg('Não foi possível adicionar o serviço.','error');return;}
-    msg('Serviço criado. Edite os campos e guarde.','success');
+    if(result.error){msg(result.error.code==='23505'?'A referência/SKU deste item já existe. Use outra.':'Não foi possível adicionar o item.','error');return;}
+    msg('Item criado. Escolha o tipo, preencha os dados e guarde.','success');
     await loadServices();
   }
 
