@@ -378,6 +378,7 @@
   }
 
   let notificationChannel = null;
+  let currentUserId = null;
 
   function subscribeCustomerNotifications(userId) {
     if (!userId || notificationChannel) return;
@@ -410,7 +411,7 @@
 
     const orders = ordersResult.data || [];
     const notes = notesResult.data || [];
-    subscribeCustomerNotifications(sessionStorage.getItem('mukwatela-customer-id') || '');
+    subscribeCustomerNotifications(currentUserId || '');
     const serviceCount = orders.reduce((sum, order) =>
       sum + (order.order_items || []).reduce((sub, item) => sub + Number(item.quantity || 0), 0), 0
     );
@@ -500,8 +501,8 @@
     if (!client()) return;
     const session = await getSession();
     if (session) {
-      sessionStorage.setItem('mukwatela-customer-id', session.user.id);
-      subscribeCustomerNotifications(session.user.id);
+      currentUserId = session.user.id;
+      subscribeCustomerNotifications(currentUserId);
     }
 
     await Promise.all([
