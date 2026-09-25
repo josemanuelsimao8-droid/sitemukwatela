@@ -140,14 +140,14 @@
     info.className = 'payment-provider-panel';
 
     const intro = document.createElement('p');
-    intro.textContent = 'Faça a transferência usando exatamente o valor do pedido e coloque o número do pedido na descrição/referência. Depois, envie o comprovativo nesta página para validação.';
+    intro.textContent = 'Efetue o pagamento usando o método selecionado, siga os dados e instruções apresentados e, depois, envie o comprovativo nesta página para validação.';
     info.appendChild(intro);
 
     const account = document.createElement('div');
     account.className = 'payment-bank-details';
 
     const accountTitle = document.createElement('h3');
-    accountTitle.textContent = 'Dados bancários da Mukwatela';
+    accountTitle.textContent = 'Dados para pagamento';
     account.appendChild(accountTitle);
 
     if (paymentMethod.account_details) {
