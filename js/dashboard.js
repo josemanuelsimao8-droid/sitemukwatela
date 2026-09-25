@@ -36,7 +36,7 @@
 
     const [ordersResult, paymentsResult, notificationsResult] = await Promise.all([
       db().from('orders')
-        .select('id,status,payment_status,total,created_at,order_items(quantity)')
+        .select('id,order_number,status,payment_status,total,created_at,order_items(quantity)')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false }),
       db().from('payments')
@@ -63,7 +63,7 @@
       0
     );
     const activeOrders = orders.filter(order => !['delivered', 'cancelled'].includes(order.status)).length;
-    const quotes = orders.filter(order => order.total === 0 || order.status === 'received').length;
+    const quotes = orders.filter(order => order.status === 'pending_quote').length;
 
     const name = profileResult.data?.full_name || user.email?.split('@')[0] || 'Cliente';
 
@@ -82,7 +82,7 @@
     if (activity) {
       activity.innerHTML = orders.slice(0, 5).map(order =>
         '<li><strong>Pedido</strong> · ' +
-        String(order.id).slice(0, 8).toUpperCase() +
+        String(order.order_number || order.id).slice(0, 16) +
         ' · ' + new Date(order.created_at).toLocaleDateString('pt-PT') +
         ' · ' + String(order.status) + '</li>'
       ).join('') || '<li>Ainda não existem pedidos.</li>';
