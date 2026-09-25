@@ -2326,3 +2326,26 @@ input:focus, textarea:focus, select:focus { border-color: #e7ae24; box-shadow: 0
   .nav-wrap{gap:12px}
   .brand-logo{width:132px;height:52px}
 }
+
+/* Home/header layout hardening: never allow the navigation to wrap or push the header out of place */
+html,body{max-width:100%;overflow-x:hidden}
+.site-header .container.nav-wrap{width:min(1180px,calc(100% - 32px));}
+.site-header .nav-wrap{display:flex;align-items:center;flex-wrap:nowrap;min-width:0;gap:14px;}
+.site-header .brand{flex:0 0 auto;}
+.site-header .main-nav{display:flex;flex:1 1 0;min-width:0;justify-content:center;overflow:hidden;}
+.site-header .main-nav ul{display:flex;flex:0 0 auto;align-items:center;justify-content:center;gap:clamp(10px,1.45vw,20px);min-width:0;white-space:nowrap;}
+.site-header .main-nav a{font-size:clamp(.68rem,.76vw,.82rem);white-space:nowrap;padding:9px 0;}
+.site-header .header-actions{display:flex;align-items:center;justify-content:flex-end;gap:7px;flex:0 0 auto;min-width:max-content;}
+.site-header .header-cart-link{min-height:44px;padding:0 11px;font-size:.72rem;}
+.site-header .header-login,.site-header .header-actions .btn-whatsapp{min-height:44px;padding-left:14px;padding-right:14px;font-size:.72rem;}
+.site-header .header-actions .btn-whatsapp{gap:7px;}
+.site-header .nav-toggle{flex:0 0 auto;}
+
+@media (max-width:1200px) and (min-width:1041px){
+  .site-header .nav-wrap{gap:10px;}
+  .site-header .brand-logo{width:126px;height:52px;}
+  .site-header .main-nav ul{gap:12px;}
+  .site-header .main-nav a{font-size:.67rem;letter-spacing:.025em;}
+  .site-header .header-cart-link{padding:0 9px;}
+  .site-header .header-login,.site-header .header-actions .btn-whatsapp{padding-left:10px;padding-right:10px;font-size:.66rem;}
+}
