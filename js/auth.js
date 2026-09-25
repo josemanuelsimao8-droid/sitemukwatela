@@ -228,6 +228,52 @@
     }
   }
 
+  async function initRecovery() {
+    const form = document.getElementById('recovery-form');
+    if (!form) return;
+
+    const { data: sessionData } = await client().auth.getSession();
+    if (!sessionData?.session) {
+      message('Abra o link de recuperação enviado para o seu email para continuar.', 'error');
+    }
+
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      setLoading(form, true);
+
+      const password = form.elements.password.value;
+      const confirmPassword = form.elements.confirmPassword.value;
+
+      if (password !== confirmPassword) {
+        message('As palavras-passe não coincidem.', 'error');
+        setLoading(form, false);
+        return;
+      }
+
+      if (password.length < 6) {
+        message('A palavra-passe deve ter pelo menos 6 caracteres.', 'error');
+        setLoading(form, false);
+        return;
+      }
+
+      const { error } = await client().auth.updateUser({ password });
+
+      message(
+        error ? 'Não foi possível atualizar a palavra-passe.' : 'Palavra-passe atualizada com sucesso. Já pode entrar.',
+        error ? 'error' : 'success'
+      );
+
+      if (!error) {
+        form.reset();
+        setTimeout(() => {
+          window.location.href = 'auth.html';
+        }, 1200);
+      } else {
+        setLoading(form, false);
+      }
+    });
+  }
+
   async function initLogout() {
     document.querySelectorAll('[data-logout]').forEach((button) => {
       button.addEventListener('click', async () => {
@@ -246,6 +292,7 @@
     if (page === 'register') await initRegister();
     if (page === 'dashboard') await initDashboard();
     if (page === 'profile') await initProfile();
+    if (page === 'recovery') await initRecovery();
     await initLogout();
   }
 
