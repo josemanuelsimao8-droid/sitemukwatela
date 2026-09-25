@@ -258,8 +258,8 @@
     if (paymentList) {
       paymentList.innerHTML = methods.map((method, index) =>
         '<label class="payment-method-option">' +
-          '<input type="radio" name="paymentMethod" value="' + method.code + '" ' + (index === 0 ? 'checked' : '') + '>' +
-          '<span><strong>' + method.name + '</strong><small>' + (method.description || '') + '</small></span>' +
+          '<input type="radio" name="paymentMethod" value="' + esc(method.code) + '" ' + (index === 0 ? 'checked' : '') + '>' +
+          '<span><strong>' + esc(method.name) + '</strong><small>' + esc(method.description || '') + '</small></span>' +
         '</label>'
       ).join('');
     }
@@ -269,9 +269,9 @@
       const method = methods.find((item) => item.code === selected);
       if (!paymentInstructions || !method) return;
       paymentInstructions.innerHTML =
-        '<strong>' + method.name + '</strong>' +
-        (method.account_details ? '<p>' + method.account_details + '</p>' : '') +
-        (method.instructions ? '<p>' + method.instructions + '</p>' : '');
+        '<strong>' + esc(method.name) + '</strong>' +
+        (method.account_details ? '<p>' + esc(method.account_details) + '</p>' : '') +
+        (method.instructions ? '<p>' + esc(method.instructions) + '</p>' : '');
     };
 
     paymentList?.addEventListener('change', renderPaymentInstructions);
@@ -402,15 +402,15 @@
     const activity = document.getElementById('recent-activity');
     if (activity) {
       activity.innerHTML = orders.slice(0, 4).map((order) =>
-        '<li>Pedido ' + order.order_number + ' · ' +
-        new Date(order.created_at).toLocaleDateString('pt-PT') + '</li>'
+        '<li>Pedido ' + esc(order.order_number) + ' · ' +
+        esc(new Date(order.created_at).toLocaleDateString('pt-PT')) + '</li>'
       ).join('') || '<li>Sem atividade recente.</li>';
     }
 
     const list = document.getElementById('dashboard-notifications');
     if (list) {
       list.innerHTML = notes.slice(0, 3).map((note) =>
-        '<li><strong>' + note.title + '</strong><span>' + note.message + '</span></li>'
+        '<li><strong>' + esc(note.title) + '</strong><span>' + esc(note.message) + '</span></li>'
       ).join('') || '<li>Sem notificações.</li>';
     }
   }
@@ -431,8 +431,8 @@
     }
 
     list.innerHTML = (result.data || []).map((note) =>
-      '<li><strong>' + note.title + '</strong><span>' + note.message +
-      '</span><small>' + new Date(note.created_at).toLocaleString('pt-PT') + '</small></li>'
+      '<li><strong>' + esc(note.title) + '</strong><span>' + esc(note.message) +
+      '</span><small>' + esc(new Date(note.created_at).toLocaleString('pt-PT')) + '</small></li>'
     ).join('') || '<li>Sem notificações.</li>';
   }
 
@@ -460,8 +460,8 @@
     const order = result.data;
     const item = order.order_items?.[0];
     summary.innerHTML =
-      '<div class="summary-row"><span>Número do pedido</span><strong>' + order.order_number + '</strong></div>' +
-      '<div class="summary-row"><span>' + (item?.item_type === 'material' ? 'Material' : 'Serviço') + '</span><strong>' + (item?.service_name || 'Item') + '</strong></div>' +
+      '<div class="summary-row"><span>Número do pedido</span><strong>' + esc(order.order_number) + '</strong></div>' +
+      '<div class="summary-row"><span>' + (item?.item_type === 'material' ? 'Material' : 'Serviço') + '</span><strong>' + esc(item?.service_name || 'Item') + '</strong></div>' +
       '<div class="summary-row"><span>Quantidade</span><strong>' + (item?.quantity || 1) + '</strong></div>' +
       '<div class="summary-row"><span>Data</span><strong>' + new Date(order.created_at).toLocaleDateString('pt-PT') + '</strong></div>' +
       '<div class="summary-row"><span>Valor</span><strong>' + (order.total === null ? 'Sob orçamento' : money(order.total, order.currency)) + '</strong></div>' +
