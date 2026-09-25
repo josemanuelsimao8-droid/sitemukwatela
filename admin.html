@@ -1,197 +1,137 @@
 <!DOCTYPE html>
 <html lang="pt-PT">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Mukwatela | Admin</title>
-    <link rel="icon" href="./public/favicon.svg" type="image/svg+xml" />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="./css/styles.css" />
-  </head>
-  <body data-page="admin">
-    <div class="app-shell admin-shell">
-      <aside class="app-sidebar admin-sidebar">
-        <div class="sidebar-brand">
-          <a href="index.html" class="brand" aria-label="Voltar ao início">
-            <img class="brand-logo" src="assets/logotipo%20.png" alt="Mukwatela logo" />
-          </a>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mukwatela | Administração</title>
+  <link rel="icon" href="./public/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./css/styles.css">
+</head>
+<body data-page="admin">
+  <div class="app-shell admin-shell">
+    <aside class="app-sidebar admin-sidebar">
+      <div class="sidebar-brand">
+        <a href="index.html" class="brand">
+          <img class="brand-logo" src="assets/logotipo%20.png" alt="Mukwatela logo">
+        </a>
+      </div>
+      <nav class="sidebar-nav" aria-label="Navegação administrativa">
+        <button class="nav-link is-active admin-tab" type="button" data-admin-section="overview">Dashboard</button>
+        <button class="nav-link admin-tab" type="button" data-admin-section="clients">Clientes</button>
+        <button class="nav-link admin-tab" type="button" data-admin-section="orders">Pedidos</button>
+        <button class="nav-link admin-tab" type="button" data-admin-section="services">Serviços</button>
+        <button class="nav-link admin-tab" type="button" data-admin-section="payments">Pagamentos</button>
+        <button class="nav-link admin-tab" type="button" data-admin-section="content">Conteúdos</button>
+        <button class="nav-link admin-tab" type="button" data-admin-section="settings">Definições</button>
+        <button class="nav-link nav-logout" type="button" data-logout>Sair</button>
+      </nav>
+    </aside>
+
+    <main class="app-main admin-main">
+      <header class="dashboard-topbar">
+        <div>
+          <p class="topbar-label">Administração</p>
+          <h1>Painel da Mukwatela</h1>
         </div>
-        <nav class="sidebar-nav" aria-label="Navegação administrativa">
-          <button class="nav-link is-active admin-tab" type="button" data-admin-section="overview">Dashboard</button>
-          <button class="nav-link admin-tab" type="button" data-admin-section="clients">Clientes</button>
-          <button class="nav-link admin-tab" type="button" data-admin-section="orders">Pedidos</button>
-          <button class="nav-link admin-tab" type="button" data-admin-section="services">Serviços</button>
-          <button class="nav-link admin-tab" type="button" data-admin-section="payments">Pagamentos</button>
-          <button class="nav-link admin-tab" type="button" data-admin-section="content">Conteúdos</button>
-          <button class="nav-link admin-tab" type="button" data-admin-section="images">Imagens</button>
-          <button class="nav-link admin-tab" type="button" data-admin-section="pages">Páginas</button>
-          <button class="nav-link admin-tab" type="button" data-admin-section="settings">Definições</button>
-          <button class="nav-link nav-logout" type="button" data-logout> Sair </button>
-        </nav>
-      </aside>
-
-      <main class="app-main admin-main">
-        <header class="dashboard-topbar">
+        <div class="topbar-user">
+          <div class="avatar-box">A</div>
           <div>
-            <p class="topbar-label">Administração</p>
-            <h1>Gestão Mukwatela</h1>
+            <strong id="admin-name">Administrador</strong>
+            <small class="dashboard-user-role">Gestor do site</small>
           </div>
-          <div class="topbar-user">
-            <div class="avatar-box">A</div>
+        </div>
+      </header>
+
+      <div id="admin-message" class="auth-message" hidden aria-live="polite"></div>
+
+      <section class="admin-section is-visible" data-admin-panel="overview">
+        <div class="summary-grid admin-kpis">
+          <article class="summary-card"><span>Clientes</span><strong id="admin-customers">0</strong></article>
+          <article class="summary-card"><span>Pedidos</span><strong id="admin-orders">0</strong></article>
+          <article class="summary-card"><span>Pagamentos confirmados</span><strong id="admin-payments">0</strong></article>
+          <article class="summary-card"><span>Receita confirmada</span><strong id="admin-revenue">AOA 0,00</strong></article>
+          <article class="summary-card"><span>Pedidos pendentes</span><strong id="admin-pending">0</strong></article>
+          <article class="summary-card"><span>Serviços ativos</span><strong id="admin-services-active">0</strong></article>
+        </div>
+        <div class="panel-card">
+          <h2>Pedidos recentes</h2>
+          <div class="table-responsive">
+            <table class="data-table">
+              <thead><tr><th>Pedido</th><th>Estado</th><th>Pagamento</th><th>Total</th><th>Data</th></tr></thead>
+              <tbody id="admin-order-table"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section class="admin-section" data-admin-panel="clients">
+        <div class="panel-card">
+          <h2>Clientes</h2>
+          <div class="table-responsive">
+            <table class="data-table">
+              <thead><tr><th>Nome</th><th>Empresa</th><th>Telefone</th><th>Função</th><th>Registo</th></tr></thead>
+              <tbody id="admin-clients-table"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section class="admin-section" data-admin-panel="orders">
+        <div class="panel-card">
+          <h2>Gestão de pedidos e pagamentos</h2>
+          <p class="admin-section-note">O administrador confirma o pagamento após verificar o Multicaixa Express ou a transferência bancária.</p>
+          <div class="table-responsive">
+            <table class="data-table">
+              <thead><tr><th>Pedido</th><th>Cliente</th><th>Serviço</th><th>Total</th><th>Método</th><th>Estado</th><th>Pagamento</th></tr></thead>
+              <tbody id="admin-all-orders"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section class="admin-section" data-admin-panel="services">
+        <div class="panel-card">
+          <div class="section-header-row">
             <div>
-              <strong>Administrador</strong>
+              <h2>Serviços</h2>
+              <p class="admin-section-note">Preços e disponibilidade são controlados pelo administrador e usam AOA.</p>
             </div>
           </div>
-        </header>
+          <div id="admin-services-list" class="admin-services-list"></div>
+        </div>
+      </section>
 
-        <section class="admin-section is-visible" data-admin-panel="overview">
-          <div class="summary-grid admin-kpis">
-            <article class="summary-card"><span>Total de clientes</span><strong id="admin-customers">0</strong></article>
-            <article class="summary-card"><span>Pedidos</span><strong id="admin-orders">0</strong></article>
-            <article class="summary-card"><span>Pagamentos</span><strong id="admin-payments">0</strong></article>
-            <article class="summary-card"><span>Receita</span><strong id="admin-revenue">€0</strong></article>
-            <article class="summary-card"><span>Pedidos pendentes</span><strong id="admin-pending">0</strong></article>
-            <article class="summary-card"><span>Serviços ativos</span><strong id="admin-services-active">0</strong></article>
-          </div>
+      <section class="admin-section" data-admin-panel="payments">
+        <div class="panel-card">
+          <h2>Métodos de pagamento</h2>
+          <p class="admin-section-note">Configure os dados que o cliente verá no checkout. Nenhum número de cartão bancário é guardado nesta plataforma.</p>
+          <div id="payment-methods-admin" class="admin-services-list"></div>
+        </div>
+      </section>
 
-          <div class="panel-card">
-            <h2>Pedidos recentes</h2>
-            <div class="table-responsive">
-              <table class="data-table">
-                <thead>
-                  <tr>
-                    <th>Cliente</th>
-                    <th>Serviço</th>
-                    <th>Data</th>
-                    <th>Valor</th>
-                    <th>Estado</th>
-                    <th>Ação</th>
-                  </tr>
-                </thead>
-                <tbody id="admin-order-table"></tbody>
-              </table>
-            </div>
-          </div>
-        </section>
+      <section class="admin-section" data-admin-panel="content">
+        <div class="panel-card">
+          <h2>Conteúdos do site</h2>
+          <p class="admin-section-note">Textos do site podem ser alterados pelo administrador no banco de conteúdos.</p>
+          <div id="content-admin" class="admin-services-list"></div>
+        </div>
+      </section>
 
-        <section class="admin-section" data-admin-panel="clients">
-          <div class="panel-card">
-            <h2>Clientes</h2>
-            <div class="table-responsive">
-              <table class="data-table">
-                <thead>
-                  <tr>
-                    <th>Nome</th>
-                    <th>Email</th>
-                    <th>Telefone</th>
-                    <th>Data de registo</th>
-                    <th>Nº pedidos</th>
-                    <th>Estado</th>
-                    <th>Ações</th>
-                  </tr>
-                </thead>
-                <tbody id="admin-clients-table"></tbody>
-              </table>
-            </div>
-          </div>
-        </section>
+      <section class="admin-section" data-admin-panel="settings">
+        <div class="panel-card">
+          <h2>Definições gerais</h2>
+          <p class="admin-section-note">Contacto, moeda, WhatsApp, email e outros dados públicos devem ser mantidos aqui pelo administrador.</p>
+          <div id="settings-admin" class="admin-settings-list"></div>
+        </div>
+      </section>
+    </main>
+  </div>
 
-        <section class="admin-section" data-admin-panel="orders">
-          <div class="panel-card">
-            <h2>Pedidos</h2>
-            <div class="filter-row">
-              <button class="pill-filter is-active" type="button" data-status-filter="all">Todos</button>
-              <button class="pill-filter" type="button" data-status-filter="Pago">Pagos</button>
-              <button class="pill-filter" type="button" data-status-filter="Pendente">Pendentes</button>
-              <button class="pill-filter" type="button" data-status-filter="Em processamento">Em processamento</button>
-              <button class="pill-filter" type="button" data-status-filter="Concluído">Concluídos</button>
-              <button class="pill-filter" type="button" data-status-filter="Cancelado">Cancelados</button>
-            </div>
-            <div class="table-responsive">
-              <table class="data-table">
-                <thead>
-                  <tr>
-                    <th>Nº pedido</th>
-                    <th>Cliente</th>
-                    <th>Serviço</th>
-                    <th>Valor</th>
-                    <th>Data</th>
-                    <th>Método</th>
-                    <th>Estado</th>
-                    <th>Ação</th>
-                  </tr>
-                </thead>
-                <tbody id="admin-all-orders"></tbody>
-              </table>
-            </div>
-          </div>
-        </section>
-
-        <section class="admin-section" data-admin-panel="services">
-          <div class="panel-card">
-            <div class="section-header-row">
-              <h2>Gerir serviços</h2>
-              <button class="btn btn-primary" type="button">Adicionar serviço</button>
-            </div>
-            <div id="admin-services-list" class="admin-services-list"></div>
-          </div>
-        </section>
-
-        <section class="admin-section" data-admin-panel="content">
-          <div class="panel-card">
-            <h2>Gestor de conteúdo</h2>
-            <div class="content-editor-grid">
-              <div>
-                <label>Título principal</label>
-                <input type="text" value="Imprimimos ideias." />
-              </div>
-              <div>
-                <label>Subtítulo</label>
-                <input type="text" value="Soluções gráficas e empresariais." />
-              </div>
-              <div>
-                <label>Botão</label>
-                <input type="text" value="Solicitar orçamento" />
-              </div>
-              <div>
-                <label>Imagem principal</label>
-                <input type="text" value="assets/WhatsApp Image 2026-09-13 at 23.30.31.jpeg" />
-              </div>
-            </div>
-            <div class="inline-action-row">
-              <button class="btn btn-secondary" type="button">Cancelar</button>
-              <button class="btn btn-primary" type="button">Guardar alterações</button>
-            </div>
-          </div>
-        </section>
-
-        <section class="admin-section" data-admin-panel="images">
-          <div class="panel-card">
-            <h2>Imagens</h2>
-            <div class="asset-grid admin-image-grid" id="admin-images-grid"></div>
-          </div>
-        </section>
-
-        <section class="admin-section" data-admin-panel="pages">
-          <div class="panel-card">
-            <h2>Páginas</h2>
-            <div class="page-list" id="admin-pages-list"></div>
-          </div>
-        </section>
-
-        <section class="admin-section" data-admin-panel="settings">
-          <div class="panel-card">
-            <h2>Definições</h2>
-            <p>Configurações gerais da plataforma front-end. A integração com APIs reais e autenticação backend deve ser feita futuramente.</p>
-          </div>
-        </section>
-      </main>
-    </div>
-
-    <script src="./js/company.js"></script>
-    <script src="./js/main.js"></script>
-    <script src="./js/mukwatela-demo.js"></script>
-  </body>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="./js/supabase.js"></script>
+  <script src="./js/admin.js"></script>
+</body>
 </html>
