@@ -17,6 +17,20 @@
     button.textContent = loading ? 'Aguarde...' : button.dataset.originalText;
   }
 
+  function redirectAfterAuth() {
+    const pending = sessionStorage.getItem('mukwatela-selected-service-id');
+    if (pending) {
+      window.location.href = 'checkout.html';
+      return true;
+    }
+    const next = new URLSearchParams(window.location.search).get('next');
+    if (next && /^[a-zA-Z0-9_-]+\.html$/.test(next)) {
+      window.location.href = next;
+      return true;
+    }
+    return false;
+  }
+
   async function getSession() {
     const { data, error } = await client().auth.getSession();
     if (error) {
@@ -52,7 +66,7 @@
 
     const session = await getSession();
     if (session) {
-      window.location.href = 'dashboard.html';
+      if (!redirectAfterAuth()) window.location.href = 'dashboard.html';
       return;
     }
 
@@ -74,7 +88,7 @@
       }
 
       if (data.session) {
-        window.location.href = 'dashboard.html';
+        if (!redirectAfterAuth()) window.location.href = 'dashboard.html';
       }
     });
 
