@@ -79,6 +79,10 @@
     render(normalized);
   }
 
-  document.addEventListener('DOMContentLoaded', refreshCatalog);
+  document.addEventListener('DOMContentLoaded', async () => {
+    const user = await cart()?.requireAuth();
+    if (!user) return;
+    await refreshCatalog();
+  });
   window.addEventListener('mukwatela:cart-updated', () => render(cart().getItems()));
 })();
