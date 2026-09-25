@@ -377,7 +377,7 @@
     const ordersResult = await client().from('orders')
       .select('id,order_number,status,payment_status,created_at,order_items(quantity,item_type)');
     const notesResult = await client().from('notifications')
-      .select('id,title,message,is_read,created_at')
+      .select('id,title,message,read,created_at')
       .order('created_at', { ascending: false })
       .limit(5);
 
@@ -421,7 +421,7 @@
     if (!await requireCustomer()) return;
 
     const result = await client().from('notifications')
-      .select('id,title,message,is_read,created_at')
+      .select('id,title,message,read,created_at')
       .order('created_at', { ascending: false });
 
     if (result.error) {
