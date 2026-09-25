@@ -84,7 +84,7 @@
   }
 
   async function loadOrders(){
-    const result=await db().from('orders').select('id,order_number,customer_id,status,total,currency,payment_method,payment_status,created_at,profiles(full_name),order_items(service_name,quantity)').order('created_at',{ascending:false}).limit(250);
+    const result=await db().from('orders').select('id,order_number,customer_id,status,total,currency,payment_method,payment_status,created_at,profiles(full_name),order_items(service_name,quantity),payments(id,status)').order('created_at',{ascending:false}).limit(250);
     if(result.error){msg('Não foi possível carregar pedidos.','error');return;}
     cache.orders=result.data||[];
     renderOrders();
@@ -100,13 +100,33 @@
     body.innerHTML=data.map(order=>{
       const item=order.order_items?.[0];
       const payment=order.payment_method==='multicaixa_express'?'Multicaixa Express':order.payment_method==='transferencia'?'Transferência':'—';
+      const paymentId = order.payments?.[0]?.id || '';
       return '<tr><td>'+esc(order.order_number)+'</td><td>'+esc(order.profiles?.full_name||'Cliente')+'</td><td>'+esc(item?.service_name||'Serviço')+'</td><td>'+money(order.total,order.currency)+'</td><td>'+esc(payment)+'</td>' +
         '<td><select data-order-status="'+order.id+'"><option value="pending_payment" '+(order.status==='pending_payment'?'selected':'')+'>A aguardar pagamento</option><option value="pending_quote" '+(order.status==='pending_quote'?'selected':'')+'>A aguardar orçamento</option><option value="processing" '+(order.status==='processing'?'selected':'')+'>Em processamento</option><option value="completed" '+(order.status==='completed'?'selected':'')+'>Concluído</option><option value="cancelled" '+(order.status==='cancelled'?'selected':'')+'>Cancelado</option></select></td>' +
-        '<td><select data-payment-status="'+order.id+'"><option value="unpaid" '+(order.payment_status==='unpaid'?'selected':'')+'>Não pago</option><option value="submitted" '+(order.payment_status==='submitted'?'selected':'')+'>Comprovativo enviado</option><option value="confirmed" '+(order.payment_status==='confirmed'?'selected':'')+'>Confirmado</option><option value="rejected" '+(order.payment_status==='rejected'?'selected':'')+'>Rejeitado</option></select></td></tr>';
+        '<td><select data-payment-status="'+order.id+'" data-payment-id="'+paymentId+'" '+(paymentId?'':'disabled title="Sem pagamento associado"')+'><option value="unpaid" '+(order.payment_status==='unpaid'?'selected':'')+'>Não pago</option><option value="submitted" '+(order.payment_status==='submitted'?'selected':'')+'>Comprovativo enviado</option><option value="confirmed" '+(order.payment_status==='confirmed'?'selected':'')+'>Confirmado</option><option value="rejected" '+(order.payment_status==='rejected'?'selected':'')+'>Rejeitado</option></select></td></tr>';
     }).join('')||'<tr><td colspan="7">Sem pedidos encontrados.</td></tr>';
 
-    body.querySelectorAll('[data-order-status]').forEach(node=>node.addEventListener('change',()=>updateOrder(node.dataset.orderStatus,{status:node.value})));
-    body.querySelectorAll('[data-payment-status]').forEach(node=>node.addEventListener('change',()=>updateOrder(node.dataset.paymentStatus,{payment_status:node.value})));
+    body.querySelectorAll('[data-order-status]').forEach(node=>node.addEventListener('change',()=>updateOrderStatus(node.dataset.orderStatus,node.value)));
+    body.querySelectorAll('[data-payment-status]').forEach(node=>node.addEventListener('change',()=>updateOrderPayment(node.dataset.paymentId,node.value)));
+  }
+
+  async function updateOrderStatus(id,status){
+    const result=await db().rpc('admin_update_order',{p_order_id:id,p_status:status,p_payment_status:null,p_delivery_status:null,p_admin_note:null});
+    if(result.error){msg('Não foi possível atualizar o estado do pedido.','error');return;}
+    msg('Estado do pedido atualizado.','success');
+    await Promise.all([loadOrders(),loadOverview()]);
+  }
+
+  async function updateOrderPayment(paymentId,status){
+    if(!paymentId){msg('Este pedido ainda não tem um registo de pagamento.','error');return;}
+    const result=await db().rpc('admin_set_payment_status',{
+      p_payment_id:paymentId,
+      p_status:status==='confirmed'?'paid':status==='rejected'?'rejected':status==='submitted'?'awaiting_confirmation':status==='unpaid'?'pending':'processing',
+      p_note:null
+    });
+    if(result.error){msg('Não foi possível atualizar o pagamento.','error');return;}
+    msg('Pagamento atualizado. Documentos e notificações foram sincronizados.','success');
+    await Promise.all([loadOrders(),loadOverview()]);
   }
 
   async function updateOrder(id,patch){
