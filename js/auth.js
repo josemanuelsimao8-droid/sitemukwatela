@@ -298,10 +298,83 @@
     const form = document.getElementById('recovery-form');
     if (!form) return;
 
-    const { data: sessionData } = await client().auth.getSession();
-    if (!sessionData?.session) {
-      message('Abra o link de recuperação enviado para o seu email para continuar.', 'error');
+    const submitButton = form.querySelector('button[type="submit"]');
+    if (submitButton) submitButton.disabled = true;
+
+    const authState = window.mukwatelaAuthState || {
+      lastEvent: null,
+      recoverySession: null
+    };
+
+    const hashParams = new URLSearchParams(
+      window.location.hash.startsWith('#')
+        ? window.location.hash.slice(1)
+        : window.location.hash
+    );
+
+    const queryParams = new URLSearchParams(window.location.search);
+
+    const hashError = hashParams.get('error_description') || hashParams.get('error');
+    if (hashError) {
+      message(
+        'O link de recuperação é inválido ou expirou. Solicite um novo email de recuperação.',
+        'error'
+      );
+      return;
     }
+
+    let recoverySession = authState.recoverySession || null;
+
+    // O cliente Supabase pode ainda estar a processar o link recebido.
+    // Escutamos o evento diretamente e aguardamos alguns segundos antes
+    // de informar o utilizador que existe um problema.
+    if (!recoverySession) {
+      recoverySession = await new Promise((resolve) => {
+        let finished = false;
+
+        const finish = (session) => {
+          if (finished) return;
+          finished = true;
+          clearTimeout(timeout);
+          subscription?.data?.subscription?.unsubscribe?.();
+          resolve(session || null);
+        };
+
+        const subscription = client().auth.onAuthStateChange((event, session) => {
+          if (event === 'PASSWORD_RECOVERY' && session) {
+            finish(session);
+          }
+          if (event === 'INITIAL_SESSION' && session && (queryParams.has('code') || hashParams.get('type') === 'recovery')) {
+            finish(session);
+          }
+        });
+
+        const timeout = setTimeout(async () => {
+          try {
+            const { data } = await client().auth.getSession();
+            finish(data?.session || null);
+          } catch {
+            finish(null);
+          }
+        }, 5000);
+      });
+    }
+
+    if (!recoverySession) {
+      const { data } = await client().auth.getSession();
+      recoverySession = data?.session || null;
+    }
+
+    if (!recoverySession) {
+      message(
+        'Este link não abriu a sessão de recuperação. Abra o link no mesmo navegador onde pediu a recuperação e, se continuar sem funcionar, peça um novo link.',
+        'error'
+      );
+      return;
+    }
+
+    if (submitButton) submitButton.disabled = false;
+    message('Link de recuperação validado. Escolha a sua nova palavra-passe.', 'success');
 
     form.addEventListener('submit', async (event) => {
       event.preventDefault();
@@ -324,19 +397,27 @@
 
       const { error } = await client().auth.updateUser({ password });
 
-      message(
-        error ? 'Não foi possível atualizar a palavra-passe.' : 'Palavra-passe atualizada com sucesso. Já pode entrar.',
-        error ? 'error' : 'success'
-      );
-
-      if (!error) {
-        form.reset();
-        setTimeout(() => {
-          window.location.href = 'auth.html';
-        }, 1200);
-      } else {
+      if (error) {
+        console.error('updateUser password:', error);
+        message(
+          'Não foi possível atualizar a palavra-passe: ' +
+            (error.message || 'sessão de recuperação inválida ou expirada.') +
+            ' Solicite um novo link se necessário.',
+          'error'
+        );
         setLoading(form, false);
+        return;
       }
+
+      message('Palavra-passe atualizada com sucesso. Já pode entrar.', 'success');
+      form.reset();
+
+      // Remove tokens/fragmentos do URL depois de concluir o processo.
+      window.history.replaceState({}, document.title, 'recuperar-password.html');
+
+      setTimeout(() => {
+        window.location.href = 'auth.html';
+      }, 1200);
     });
   }
 
