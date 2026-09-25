@@ -188,15 +188,20 @@
         return;
       }
 
+      const firstName = name.split(/\s+/).filter(Boolean)[0] || name;
+
       const { data, error } = await client().auth.signUp({
         email,
         password,
         options: {
           data: {
             full_name: name,
+            first_name: firstName,
             phone,
             company,
             address: '',
+            brand_name: 'Mukwatela',
+            company_name: 'Mukwatela',
             terms_accepted: 'true'
           },
           emailRedirectTo: new URL('auth.html', window.location.href).href
