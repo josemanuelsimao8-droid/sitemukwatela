@@ -1,5 +1,8 @@
 (() => {
   const client = () => window.supabaseClient;
+  const esc = (value) => String(value ?? '').replace(/[&<>"']/g, (char) => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;'
+  }[char]));
 
   async function getSession() {
     const result = await client().auth.getUser();
