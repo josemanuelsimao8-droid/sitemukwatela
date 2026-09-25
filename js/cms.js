@@ -111,7 +111,7 @@
     if (!container) return;
 
     if (!state.services.length) {
-      container.innerHTML = '<p>Não existem serviços disponíveis neste momento.</p>';
+      container.innerHTML = '<p>Não existem itens disponíveis neste momento.</p>';
       return;
     }
 
@@ -125,11 +125,14 @@
       const visual = document.createElement('div');
       visual.className = 'service-visual';
       if (service.image_url) {
+        const imageLink = document.createElement('a');
+        imageLink.href = 'produto.html?id=' + encodeURIComponent(service.id);
         const img = document.createElement('img');
         img.src = encodeURI(service.image_url);
         img.alt = service.name;
         img.loading = 'lazy';
-        visual.appendChild(img);
+        imageLink.appendChild(img);
+        visual.appendChild(imageLink);
       }
 
       const copy = document.createElement('div');
@@ -145,11 +148,34 @@
       const description = document.createElement('p');
       description.textContent = service.description || '';
 
-      const link = document.createElement('a');
-      link.href = service.item_type === 'material' ? 'materiais.html' : 'services.html';
-      link.textContent = service.item_type === 'material' ? 'Ver material' : 'Ver serviço';
+      const actions = document.createElement('div');
+      actions.className = 'catalog-card-actions';
 
-      copy.append(category, title, description, link);
+      const details = document.createElement('a');
+      details.href = 'produto.html?id=' + encodeURIComponent(service.id);
+      details.className = 'catalog-detail-link';
+      details.textContent = 'Ver detalhes';
+
+      actions.appendChild(details);
+
+      if (window.MukwatelaCart) {
+        const cartButton = document.createElement('button');
+        cartButton.type = 'button';
+        cartButton.className = 'btn btn-primary btn-small';
+        cartButton.textContent = 'Adicionar ao carrinho';
+        cartButton.addEventListener('click', () => {
+          if (service.item_type === 'material' && service.stock_quantity !== null && Number(service.stock_quantity) < 1) {
+            window.alert('Este material está sem stock.');
+            return;
+          }
+          window.MukwatelaCart.add(service, 1, {});
+          cartButton.textContent = 'Adicionado';
+          window.setTimeout(() => { cartButton.textContent = 'Adicionar ao carrinho'; }, 1500);
+        });
+        actions.appendChild(cartButton);
+      }
+
+      copy.append(category, title, description, actions);
       article.append(visual, copy);
       container.appendChild(article);
     });
