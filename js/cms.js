@@ -17,7 +17,7 @@
       client.from('site_settings').select('key,value'),
       client.from('site_content').select('page,section,field,value'),
       client.from('services')
-        .select('id,name,slug,category,description,image_url,features,unit_price,currency,is_active,sort_order')
+        .select('id,name,slug,category,description,image_url,features,unit_price,currency,is_active,sort_order,item_type,sku,unit_label,stock_quantity,is_featured')
         .eq('is_active', true)
         .order('sort_order', { ascending: true }),
       client.from('site_media')
@@ -137,7 +137,7 @@
 
       const category = document.createElement('span');
       category.className = 'service-number';
-      category.textContent = service.category || 'Serviço';
+      category.textContent = service.item_type === 'material' ? 'Material' : (service.category || 'Serviço');
 
       const title = document.createElement('h3');
       title.textContent = service.name;
@@ -146,8 +146,8 @@
       description.textContent = service.description || '';
 
       const link = document.createElement('a');
-      link.href = 'services.html';
-      link.textContent = 'Ver serviço';
+      link.href = service.item_type === 'material' ? 'materiais.html' : 'services.html';
+      link.textContent = service.item_type === 'material' ? 'Ver material' : 'Ver serviço';
 
       copy.append(category, title, description, link);
       article.append(visual, copy);
