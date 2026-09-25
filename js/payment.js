@@ -174,7 +174,7 @@
     ref.id = 'bank-reference';
     ref.type = 'text';
     ref.placeholder = 'Número da operação ou referência';
-    ref.value = payment?.reference || order.payment_reference || '';
+    ref.value = payment?.transaction_reference || '';
     refLabel.appendChild(ref);
 
     const fileLabel = document.createElement('label');
@@ -265,7 +265,7 @@
     const result = await client().from('orders')
       .select('id,order_number,status,total,currency,payment_method,payment_status,created_at,updated_at,order_items(service_name,quantity,unit_price)')
       .eq('id', orderId)
-      .eq('customer_id', session.user.id)
+      .eq('user_id', session.user.id)
       .maybeSingle();
 
     if (result.error) throw result.error;
