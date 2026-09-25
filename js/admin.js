@@ -280,6 +280,95 @@
     });
   }
 
+  async function loadAdmins() {
+    const result = await db().rpc('list_admins');
+
+    const list = document.getElementById('admin-admins-list');
+    if (!list) return;
+
+    if (result.error) {
+      list.innerHTML = '<p>Não foi possível carregar os administradores.</p>';
+      msg('Não foi possível carregar administradores.', 'error');
+      return;
+    }
+
+    list.innerHTML = (result.data || []).map((admin) => {
+      const isCurrent = admin.user_id === window.currentAdminId;
+      return '<article class="admin-admin-card">' +
+        '<div>' +
+          '<strong>' + esc(admin.full_name || 'Administrador') + '</strong>' +
+          '<span>' + esc(admin.email || '') + '</span>' +
+          '<small>Administrador desde ' + new Date(admin.created_at).toLocaleDateString('pt-PT') + '</small>' +
+        '</div>' +
+        '<button class="btn btn-secondary" type="button" data-remove-admin="' + admin.user_id + '" ' + (isCurrent ? 'disabled' : '') + '>' +
+          (isCurrent ? 'Administrador atual' : 'Remover acesso') +
+        '</button>' +
+      '</article>';
+    }).join('') || '<p>Não existem administradores configurados.</p>';
+
+    list.querySelectorAll('[data-remove-admin]:not([disabled])').forEach((button) => {
+      button.addEventListener('click', async () => {
+        const adminCard = button.closest('.admin-admin-card');
+        const email = adminCard?.querySelector('span')?.textContent?.trim();
+        if (!email) return;
+
+        const confirmed = window.confirm('Remover o acesso de administrador de ' + email + '?');
+        if (!confirmed) return;
+
+        button.disabled = true;
+        const result = await db().rpc('set_admin_role_by_email', {
+          p_email: email,
+          p_make_admin: false
+        });
+
+        if (result.error) {
+          msg('Não foi possível remover o acesso de administrador.', 'error');
+          button.disabled = false;
+          return;
+        }
+
+        msg('Acesso de administrador removido.', 'success');
+        await Promise.all([loadAdmins(), loadClients()]);
+      });
+    });
+  }
+
+  async function addAdmin() {
+    const input = document.getElementById('new-admin-email');
+    const email = input?.value?.trim().toLowerCase();
+    if (!email) {
+      msg('Introduza o email do utilizador que pretende tornar administrador.', 'error');
+      input?.focus();
+      return;
+    }
+
+    const button = document.getElementById('add-admin-btn');
+    if (button) button.disabled = true;
+
+    const result = await db().rpc('set_admin_role_by_email', {
+      p_email: email,
+      p_make_admin: true
+    });
+
+    if (result.error) {
+      const raw = result.error.message || '';
+      const userNotFound = raw.includes('USER_NOT_FOUND');
+      msg(
+        userNotFound
+          ? 'Este email ainda não tem uma conta registada. Primeiro peça ao utilizador para criar a conta no site.'
+          : 'Não foi possível adicionar este administrador.',
+        'error'
+      );
+      if (button) button.disabled = false;
+      return;
+    }
+
+    input.value = '';
+    msg('Administrador adicionado com sucesso.', 'success');
+    if (button) button.disabled = false;
+    await Promise.all([loadAdmins(), loadClients()]);
+  }
+
   async function init() {
     if (!db()) return;
     const admin = await requireAdmin();
@@ -288,7 +377,7 @@
     const profile = await db().from('profiles').select('full_name').eq('id', admin.user.id).maybeSingle();
     document.getElementById('admin-name').textContent = profile.data?.full_name || 'Administrador';
 
-    await Promise.all([loadOverview(),loadClients(),loadOrders(),loadServices(),loadPayments(),loadSettings(),loadContent()]);
+    await Promise.all([loadOverview(),loadClients(),loadOrders(),loadServices(),loadPayments(),loadSettings(),loadContent(),loadAdmins()]);
 
     document.querySelectorAll('.admin-tab').forEach((tab)=>{
       tab.addEventListener('click',()=>{
