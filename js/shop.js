@@ -16,7 +16,7 @@
   }
 
   function money(value, currency) {
-    if (value === null || value === undefined || value === '') return 'Sob orçamento';
+    if (value === null || value === undefined || value === '') return 'Valor em ' + String(currency || 'AOA') + ' — sob orçamento';
     return String(currency || 'AOA') + ' ' +
       Number(value).toLocaleString('pt-PT', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   }
@@ -170,6 +170,8 @@
 
     const qty = document.getElementById('service-quantity');
     const totalNode = document.getElementById('checkout-total');
+    const paymentList = document.getElementById('payment-method-list');
+    const paymentInstructions = document.getElementById('payment-instructions');
 
     function updateTotal() {
       const quantity = Math.max(1, Number(qty?.value || 1));
@@ -183,10 +185,50 @@
     if (qty) qty.addEventListener('input', updateTotal);
     updateTotal();
 
+    const methodsResult = await client().from('payment_methods')
+      .select('id,code,name,description,account_details,instructions,is_active,sort_order')
+      .eq('is_active', true)
+      .order('sort_order', { ascending: true });
+
+    if (methodsResult.error) {
+      console.error(methodsResult.error);
+      showMessage('Não foi possível carregar os métodos de pagamento.', 'error');
+      return;
+    }
+
+    const methods = methodsResult.data || [];
+    if (paymentList) {
+      paymentList.innerHTML = methods.map((method, index) =>
+        '<label class="payment-method-option">' +
+          '<input type="radio" name="paymentMethod" value="' + method.code + '" ' + (index === 0 ? 'checked' : '') + '>' +
+          '<span><strong>' + method.name + '</strong><small>' + (method.description || '') + '</small></span>' +
+        '</label>'
+      ).join('');
+    }
+
+    const renderPaymentInstructions = () => {
+      const selected = paymentList?.querySelector('input[name="paymentMethod"]:checked')?.value;
+      const method = methods.find((item) => item.code === selected);
+      if (!paymentInstructions || !method) return;
+      paymentInstructions.innerHTML =
+        '<strong>' + method.name + '</strong>' +
+        (method.account_details ? '<p>' + method.account_details + '</p>' : '') +
+        (method.instructions ? '<p>' + method.instructions + '</p>' : '');
+    };
+
+    paymentList?.addEventListener('change', renderPaymentInstructions);
+    renderPaymentInstructions();
+
     form.addEventListener('submit', async (event) => {
       event.preventDefault();
 
       const quantity = Math.max(1, Number(qty?.value || 1));
+      const paymentMethod = form.querySelector('input[name="paymentMethod"]:checked')?.value || null;
+      if (!paymentMethod) {
+        showMessage('Selecione um método de pagamento.', 'error');
+        return;
+      }
+
       const specifications = {
         format: document.getElementById('service-format')?.value || '',
         material: document.getElementById('service-material')?.value.trim() || '',
@@ -202,7 +244,8 @@
         p_service_id: service.id,
         p_quantity: quantity,
         p_notes: notes,
-        p_specifications: specifications
+        p_specifications: specifications,
+        p_payment_method: paymentMethod
       });
 
       if (result.error) {
@@ -241,7 +284,7 @@
     }
 
     const result = await client().from('orders')
-      .select('id,order_number,status,total,currency,created_at,order_items(service_name,quantity)')
+      .select('id,order_number,status,total,currency,payment_method,payment_status,created_at,order_items(service_name,quantity)')
       .order('created_at', { ascending: false });
 
     if (result.error) {
@@ -363,7 +406,7 @@
     }
 
     const result = await client().from('orders')
-      .select('id,order_number,status,total,currency,created_at,order_items(service_name,quantity)')
+      .select('id,order_number,status,total,currency,payment_method,payment_status,created_at,order_items(service_name,quantity)')
       .eq('id', orderId)
       .maybeSingle();
 
