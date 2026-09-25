@@ -1,153 +1,79 @@
 (() => {
-  const client = () => window.supabaseClient;
+  const db=()=>window.supabaseClient, cart=()=>window.MukwatelaCart;
+  const money=(v,c='AOA')=>v==null?'Sob orçamento':c+' '+Number(v).toLocaleString('pt-PT',{minimumFractionDigits:2,maximumFractionDigits:2});
+  const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
+  let catalog=[],zones=[],methods=[],hasQuote=false;
 
-  function message(text, type = 'info') {
-    const node = document.getElementById('shop-message');
-    if (!node) return;
-    node.textContent = text;
-    node.dataset.type = type;
-    node.hidden = false;
+  function message(text,type='info'){const n=document.getElementById('shop-message');if(!n)return;n.textContent=text;n.dataset.type=type;n.hidden=false;}
+  async function getSession(){const r=await db().auth.getSession();return r.data?.session||null;}
+  async function loadCatalog(){
+    const items=cart().getItems();if(!items.length)return [];
+    const r=await db().from('services').select('id,name,slug,category,description,image_url,features,unit_price,currency,item_type,sku,unit_label,stock_quantity,is_active').in('id',items.map(x=>x.id)).eq('is_active',true);
+    if(r.error)throw r.error;
+    return items.map(ci=>{const fresh=(r.data||[]).find(x=>x.id===ci.id);return fresh?Object.assign({},ci,fresh):null;}).filter(Boolean);
   }
-
-  async function getSession() {
-    const result = await client().auth.getSession();
-    if (result.error) console.error(result.error);
-    return result.data?.session || null;
+  function renderSummary(items){
+    const node=document.getElementById('checkout-cart-summary'),type=document.getElementById('checkout-item-type');if(!node)return;
+    hasQuote=items.some(x=>x.unit_price==null);
+    node.innerHTML=items.map(x=>'<div class="checkout-cart-item"><div><strong>'+esc(x.name)+'</strong><small>'+esc(x.item_type==='material'?'Material':'Serviço')+' · '+Number(x.quantity)+' '+esc(x.unit_label||'unidade')+'</small></div><strong>'+(x.unit_price==null?'Sob orçamento':esc(money(Number(x.unit_price)*Number(x.quantity),x.currency)))+'</strong></div>').join('');
+    if(type)type.textContent=hasQuote?'O carrinho contém itens que precisam de orçamento. Os valores serão definidos pela Mukwatela.':'Todos os itens têm preço definido e podem seguir para pagamento.';
+    updateTotals();
   }
-
-  function selectedPaymentMethod(form) {
-    return form.querySelector('input[name="paymentMethod"]:checked')?.value || null;
+  function updateTotals(){
+    const subtotal=document.getElementById('checkout-subtotal'),fee=document.getElementById('checkout-delivery-fee'),total=document.getElementById('checkout-total'),method=document.getElementById('delivery-method')?.value||'pickup',zone=document.getElementById('delivery-zone')?.value;
+    const known=!hasQuote;
+    const base=known?catalog.reduce((s,x)=>s+Number(x.unit_price)*Number(x.quantity),0):null;
+    const z=zones.find(x=>x.id===zone),deliveryFee=method==='delivery'?(Number(z?.fee||0)):0;
+    if(subtotal)subtotal.textContent=base==null?'Sob orçamento':money(base,catalog[0]?.currency||'AOA');
+    if(fee)fee.textContent=money(deliveryFee,catalog[0]?.currency||'AOA');
+    if(total)total.textContent=base==null?'Sob orçamento':money(base+deliveryFee,catalog[0]?.currency||'AOA');
+    document.getElementById('delivery-zone')?.toggleAttribute('disabled',method!=='delivery');
+    const addr=document.getElementById('delivery-address');if(addr)addr.required=method==='delivery';
+    const note=document.getElementById('delivery-zone-note');if(note)note.textContent=method==='delivery'?(z?z.description+' · Taxa: '+money(z.fee,catalog[0]?.currency||'AOA'):'Selecione uma zona de entrega.'):'Levantamento sem taxa de entrega.';
+    const payStage=document.querySelector('.checkout-payment-stage');if(payStage)payStage.hidden=hasQuote;
+    const submit=document.querySelector('#checkout-form button[type="submit"]');if(submit)submit.textContent=hasQuote?'ENVIAR PARA ORÇAMENTO':'CONTINUAR PARA PAGAMENTO';
   }
-
-  async function loadService(id) {
-    const result = await client().from('services')
-      .select('id,name,unit_price,currency,is_active,item_type,unit_label,stock_quantity')
-      .eq('id', id)
-      .eq('is_active', true)
-      .maybeSingle();
-    if (result.error) throw result.error;
-    return result.data;
+  async function loadProfile(session){
+    const r=await db().from('profiles').select('full_name,phone,address').eq('id',session.user.id).maybeSingle(),p=r.data||{};
+    const name=document.getElementById('checkout-name');if(name)name.value=p.full_name||'';
+    const contact=document.getElementById('delivery-contact');if(contact)contact.value=p.phone||'';
+    const address=document.getElementById('delivery-address');if(address)address.value=p.address||'';
   }
-
-  async function submitOrder(form) {
-    const session = await getSession();
-    if (!session) {
-      window.location.href = 'auth.html';
-      return;
-    }
-
-    const selectedId = sessionStorage.getItem('mukwatela-selected-service-id');
-    if (!selectedId) {
-      message('Selecione um serviço antes de continuar.', 'error');
-      return;
-    }
-
-    const service = await loadService(selectedId);
-    if (!service) {
-      message('O item selecionado já não está disponível.', 'error');
-      return;
-    }
-
-    const itemTypeNode = document.getElementById('checkout-item-type');
-    if (itemTypeNode) {
-      itemTypeNode.textContent = service.item_type === 'material'
-        ? 'Material para compra · indique a quantidade e a forma de entrega.'
-        : 'Serviço personalizado · preencha os detalhes necessários para execução.';
-    }
-    const initialPaymentStage = form.querySelector('.checkout-payment-stage');
-    if (initialPaymentStage) initialPaymentStage.hidden = service.unit_price === null;
-    const initialSubmit = form.querySelector('button[type="submit"]');
-    if (initialSubmit) initialSubmit.textContent = service.unit_price === null ? 'ENVIAR PARA ORÇAMENTO' : 'CONTINUAR PARA PAGAMENTO';
-
-    const quantity = Math.max(1, Number(document.getElementById('service-quantity')?.value || 1));
-    if (service.item_type === 'material' && service.stock_quantity !== null && quantity > Number(service.stock_quantity)) {
-      message('A quantidade solicitada ultrapassa o stock disponível (' + service.stock_quantity + ' ' + (service.unit_label || 'unidade') + ').', 'error');
-      return;
-    }
-
-    const paymentMethod = service.unit_price === null ? null : selectedPaymentMethod(form);
-    if (service.unit_price !== null && !paymentMethod) {
-      message('Selecione uma forma de pagamento.', 'error');
-      return;
-    }
-    const specifications = {
-      format: document.getElementById('service-format')?.value || '',
-      material: document.getElementById('service-material')?.value.trim() || '',
-      dimensions: document.getElementById('service-dimensions')?.value.trim() || '',
-      deadline: document.getElementById('service-deadline')?.value.trim() || ''
-    };
-    const notes = document.getElementById('service-observations')?.value.trim() || null;
-    const deliveryMethod = document.getElementById('delivery-method')?.value || 'pickup';
-    const deliveryContact = document.getElementById('delivery-contact')?.value.trim() || null;
-    const deliveryAddress = document.getElementById('delivery-address')?.value.trim() || null;
-
-    if (deliveryMethod === 'delivery' && !deliveryAddress) {
-      message('Introduza a morada de entrega ou escolha levantamento na Mukwatela.', 'error');
-      return;
-    }
-
-    const submit = form.querySelector('button[type="submit"]');
-    const paymentStage = form.querySelector('.checkout-payment-stage');
-    if (paymentStage) paymentStage.hidden = service.unit_price === null;
-
-    submit.disabled = true;
-    submit.textContent = 'A criar pedido...';
-
-    const result = await client().rpc('create_service_order', {
-      p_service_id: service.id,
-      p_quantity: quantity,
-      p_notes: notes,
-      p_specifications: specifications,
-      p_payment_method: paymentMethod,
-      p_delivery_method: deliveryMethod,
-      p_delivery_address: deliveryAddress,
-      p_delivery_contact: deliveryContact
-    });
-
-    if (result.error) {
-      console.error(result.error);
-      const code = String(result.error.code || '');
-      const detail = String(result.error.message || '');
-      if (detail.includes('INSUFFICIENT_STOCK') || detail.includes('Insufficient stock')) {
-        message('O stock disponível não é suficiente para esta quantidade.', 'error');
-      } else if (detail.includes('PAYMENT_METHOD_NOT_AVAILABLE') || code === 'PGRST202') {
-        message('Este método de pagamento não está disponível de momento.', 'error');
-      } else {
-        message('Não foi possível criar o pedido. Tente novamente.', 'error');
-      }
-      submit.disabled = false;
-      submit.textContent = 'CONTINUAR PARA PAGAMENTO';
-      return;
-    }
-
-    const orderId = result.data?.id;
-    sessionStorage.setItem('mukwatela-last-order-id', orderId || '');
-    sessionStorage.removeItem('mukwatela-selected-service-id');
-    sessionStorage.removeItem('mukwatela-selected-service');
-
-    window.location.href = service.unit_price === null
-      ? 'orcamentos.html'
-      : 'pagamento.html?order=' + encodeURIComponent(orderId);
+  async function loadPaymentMethods(){
+    const r=await db().from('payment_methods').select('id,code,name,description,account_details,instructions,is_active,sort_order').eq('is_active',true).order('sort_order',{ascending:true});if(r.error)throw r.error;methods=r.data||[];
+    const list=document.getElementById('payment-method-list');if(!list)return;
+    list.innerHTML=methods.map((m,i)=>'<label class="payment-method-option"><input type="radio" name="paymentMethod" value="'+esc(m.code)+'" '+(i===0?'checked':'')+'><span><strong>'+esc(m.name)+'</strong><small>'+esc(m.description||'')+'</small></span></label>').join('');
+    list.addEventListener('change',renderPaymentInstructions);renderPaymentInstructions();
   }
-
-  document.addEventListener('DOMContentLoaded', () => {
-    const form = document.getElementById('checkout-form');
-    if (!form) return;
-
-    form.addEventListener('submit', async (event) => {
-      event.preventDefault();
-      event.stopImmediatePropagation();
-      try {
-        await submitOrder(form);
-      } catch (error) {
-        console.error(error);
-        message('Ocorreu um erro ao processar o pedido. Tente novamente.', 'error');
-        const submit = form.querySelector('button[type="submit"]');
-        if (submit) {
-          submit.disabled = false;
-          submit.textContent = 'CONTINUAR PARA PAGAMENTO';
-        }
-      }
-    }, true);
+  function renderPaymentInstructions(){const node=document.getElementById('payment-instructions'),value=document.querySelector('input[name="paymentMethod"]:checked')?.value,m=methods.find(x=>x.code===value);if(!node||!m)return;node.innerHTML='<strong>'+esc(m.name)+'</strong>'+(m.account_details?'<p>'+esc(m.account_details)+'</p>':'')+(m.instructions?'<p>'+esc(m.instructions)+'</p>':'');}
+  async function loadZones(){
+    const r=await db().from('delivery_zones').select('id,name,description,fee').eq('is_active',true).order('sort_order',{ascending:true});if(r.error)throw r.error;zones=r.data||[];
+    const node=document.getElementById('delivery-zone');if(!node)return;
+    node.innerHTML='<option value="">Selecione a zona</option>'+zones.map(z=>'<option value="'+z.id+'">'+esc(z.name)+' · '+esc(money(z.fee,catalog[0]?.currency||'AOA'))+'</option>').join('');
+  }
+  async function submit(form){
+    const session=await getSession();if(!session){location.href='auth.html';return;}
+    catalog=await loadCatalog();if(!catalog.length){message('O carrinho está vazio ou contém itens indisponíveis.','error');return;}
+    for(const x of catalog){if(x.item_type==='material'&&x.stock_quantity!=null&&Number(x.quantity)>Number(x.stock_quantity)){message('O stock de '+x.name+' não é suficiente. Disponível: '+x.stock_quantity+' '+(x.unit_label||'unidade')+'.','error');return;}}
+    const deliveryMethod=document.getElementById('delivery-method')?.value||'pickup',zoneId=deliveryMethod==='delivery'?document.getElementById('delivery-zone')?.value||null:null;
+    const address=document.getElementById('delivery-address')?.value.trim()||null,contact=document.getElementById('delivery-contact')?.value.trim()||null;
+    if(deliveryMethod==='delivery'&&(!zoneId||!address)){message('Selecione uma zona e preencha a morada de entrega.','error');return;}
+    const paymentMethod=hasQuote?null:document.querySelector('input[name="paymentMethod"]:checked')?.value||null;if(!hasQuote&&!paymentMethod){message('Selecione uma forma de pagamento.','error');return;}
+    const notes=document.getElementById('service-observations')?.value.trim()||null;
+    const items=catalog.map(x=>({service_id:x.id,quantity:Math.max(1,Math.trunc(Number(x.quantity)||1)),specifications:x.specifications||{}}));
+    const submitBtn=form.querySelector('button[type="submit"]');if(submitBtn){submitBtn.disabled=true;submitBtn.textContent='A criar pedido...';}
+    const r=await db().rpc('create_cart_order',{p_items:items,p_notes:notes,p_payment_method:paymentMethod,p_delivery_method:deliveryMethod,p_delivery_zone_id:zoneId,p_delivery_address:address,p_delivery_contact:contact});
+    if(r.error){console.error(r.error);const d=String(r.error.message||'');message(d.includes('INSUFFICIENT_STOCK')?'O stock disponível não é suficiente para o carrinho.':d.includes('DELIVERY_ZONE')?'A zona de entrega deixou de estar disponível.':d.includes('PAYMENT_METHOD')?'A forma de pagamento selecionada não está disponível.':'Não foi possível criar o pedido. Tente novamente.','error');if(submitBtn){submitBtn.disabled=false;submitBtn.textContent=hasQuote?'ENVIAR PARA ORÇAMENTO':'CONTINUAR PARA PAGAMENTO';}return;}
+    const orderId=r.data?.id||r.data?.[0]?.id;cart().clear();sessionStorage.setItem('mukwatela-last-order-id',orderId||'');location.href=hasQuote?'orcamentos.html':'pagamento.html?order='+encodeURIComponent(orderId);
+  }
+  document.addEventListener('DOMContentLoaded',async()=>{
+    const form=document.getElementById('checkout-form');if(!form)return;
+    const session=await getSession();if(!session){location.href='auth.html';return;}
+    catalog=await loadCatalog();if(!catalog.length){message('O carrinho está vazio.','error');form.hidden=true;return;}
+    renderSummary(catalog);await loadProfile(session);
+    try{await Promise.all([loadPaymentMethods(),loadZones()]);}catch(e){console.error(e);message('Não foi possível carregar as opções de pagamento ou entrega.','error');}
+    document.getElementById('delivery-method')?.addEventListener('change',updateTotals);document.getElementById('delivery-zone')?.addEventListener('change',updateTotals);
+    updateTotals();
+    form.addEventListener('submit',e=>{e.preventDefault();submit(form).catch(err=>{console.error(err);message('Ocorreu um erro ao processar o pedido.','error');const b=form.querySelector('button[type="submit"]');if(b){b.disabled=false;b.textContent=hasQuote?'ENVIAR PARA ORÇAMENTO':'CONTINUAR PARA PAGAMENTO';}});});
   });
 })();
