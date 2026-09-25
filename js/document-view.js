@@ -5,7 +5,7 @@
   async function init(){
     const session=(await db().auth.getSession()).data?.session;if(!session){location.href='auth.html';return;}
     const id=new URLSearchParams(location.search).get('id');if(!id)return;
-    const d=await db().from('documents').select('id,order_id,customer_id,document_type,document_number,amount,currency,status,issue_date,due_date,notes').eq('id',id).eq('customer_id',session.user.id).maybeSingle();
+    const d=await db().from('documents').select('id,order_id,customer_id,document_type,document_number,amount,currency,status,issue_date,due_date,notes').eq('id',id).maybeSingle();
     if(d.error||!d.data){document.getElementById('document-sheet').innerHTML='<h1>Documento não encontrado.</h1>';return;}
     const [settings,order]=await Promise.all([
       db().from('site_settings').select('key,value').in('key',['company_name','nif','address','email','phone']),
