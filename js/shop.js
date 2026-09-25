@@ -320,6 +320,17 @@
     return statusLabels[status] || status;
   }
 
+  const paymentStatusLabels = {
+    unpaid: 'Não pago',
+    submitted: 'Em validação',
+    confirmed: 'Pago',
+    rejected: 'Rejeitado'
+  };
+
+  function paymentStatusLabel(status) {
+    return paymentStatusLabels[status] || 'Não pago';
+  }
+
   async function loadOrders() {
     const body = document.getElementById('orders-table-body');
     if (!body) return;
@@ -349,16 +360,19 @@
         '<td>' + (item?.service_name || 'Serviço') + '</td>' +
         '<td>' + new Date(order.created_at).toLocaleDateString('pt-PT') + '</td>' +
         '<td>' + amount + '</td>' +
-        '<td>A aguardar pagamento</td>' +
+        '<td><span class="status-pill payment-status-table payment-status-table-' + (order.payment_status || 'unpaid') + '">' + paymentStatusLabel(order.payment_status) + '</span></td>' +
         '<td><span class="status-pill">' + statusLabel(order.status) + '</span></td>' +
-        '<td><button type="button" class="link-button" data-order-detail="' + order.id + '">Ver detalhes</button></td>' +
+        '<td><button type="button" class="link-button" data-order-detail="' + order.id + '">' + (order.payment_status === 'confirmed' || order.total === null ? 'Ver pedido' : 'Pagar agora') + '</button></td>' +
         '</tr>';
     }).join('');
 
     body.querySelectorAll('[data-order-detail]').forEach((button) => {
       button.addEventListener('click', () => {
         sessionStorage.setItem('mukwatela-last-order-id', button.dataset.orderDetail);
-        window.location.href = 'pedido-confirmado.html';
+        const shouldPay = button.textContent.trim() === 'Pagar agora';
+        window.location.href = shouldPay
+          ? 'pagamento.html?order=' + encodeURIComponent(button.dataset.orderDetail)
+          : 'pedido-confirmado.html';
       });
     });
   }
