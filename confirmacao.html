@@ -6,66 +6,57 @@
 <title>Mukwatela | Confirmação de conta</title>
 <link rel="icon" href="./public/favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="./css/styles.css">
+<style>
+.confirm-page{min-height:70vh;display:flex;align-items:center;justify-content:center;padding:48px 20px}
+.confirm-box{width:min(620px,100%);background:#fff;border:1px solid rgba(15,23,42,.1);border-radius:18px;padding:36px;box-shadow:0 15px 45px rgba(15,23,42,.08)}
+.confirm-box h1{margin:0 0 12px}.confirm-box p{line-height:1.6;color:#475569}
+.confirm-status{margin:20px 0;padding:16px;border-radius:12px;background:#f8fafc;color:#0f172a}
+.confirm-status.success{background:#f0fdf4;color:#166534;border:1px solid #bbf7d0}
+.confirm-status.error{background:#fef2f2;color:#991b1b;border:1px solid #fecaca}
+</style>
 </head>
 <body data-page="auth">
-<header class="site-header" id="top">
-  <div class="container nav-wrap">
-    <a href="index.html" class="brand" aria-label="Voltar ao início"><img class="brand-logo" src="assets/logotipo%20.png" alt="Mukwatela logo"></a>
-    <nav class="main-nav" aria-label="Navegação principal"><ul>
-      <li><a href="index.html">Início</a></li><li><a href="services.html">Serviços</a></li><li><a href="materiais.html">Materiais</a></li><li><a href="portfolio.html">Portfólio</a></li><li><a href="contactos.html">Contactos</a></li>
-    </ul></nav>
-    <div class="header-actions"><a class="header-cart-link" href="carrinho.html">Carrinho</a><a class="btn btn-secondary header-login" href="auth.html">Entrar</a></div>
-  </div>
-</header>
-<main class="auth-page-shell">
-  <section class="auth-layout container">
-    <div class="auth-panel auth-visual">
-      <span class="eyebrow">Confirmação de conta</span>
-      <h1>Bem-vindo à Mukwatela.</h1>
-      <p id="confirm-description">Estamos a confirmar o seu email.</p>
-      <ul class="auth-feature-list"><li>Área privada do cliente</li><li>Acompanhamento de pedidos</li><li>Orçamentos e pagamentos</li></ul>
-    </div>
-    <div class="auth-panel auth-card">
-      <div id="confirm-state" class="auth-message" aria-live="polite">A confirmar a sua conta...</div>
-      <a id="confirm-action" class="btn btn-primary btn-block" href="auth.html" hidden>Entrar na minha conta</a>
-    </div>
-  </section>
-</main>
+<header class="site-header" id="top"><div class="container nav-wrap">
+<a href="index.html" class="brand" aria-label="Voltar ao início"><img class="brand-logo" src="assets/logotipo%20.png" alt="Mukwatela logo"></a>
+<nav class="main-nav" aria-label="Navegação principal"><ul><li><a href="index.html">Início</a></li><li><a href="services.html">Serviços</a></li><li><a href="materiais.html">Materiais</a></li><li><a href="portfolio.html">Portfólio</a></li><li><a href="contactos.html">Contactos</a></li></ul></nav>
+<div class="header-actions"><a class="header-cart-link" href="carrinho.html">Carrinho</a><a class="btn btn-secondary header-login" href="auth.html">Entrar</a></div>
+</div></header>
+<main class="confirm-page"><section class="confirm-box" aria-live="polite">
+<span class="eyebrow">Confirmação de conta</span><h1>Bem-vindo à Mukwatela.</h1>
+<p id="confirm-description">Estamos a validar o seu endereço de email.</p>
+<div id="confirm-state" class="confirm-status">A confirmar a sua conta...</div>
+<a id="confirm-action" class="btn btn-primary btn-block" href="auth.html">Ir para o login</a>
+</section></main>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="./js/supabase.js"></script>
 <script>
-document.addEventListener('DOMContentLoaded', async () => {
-  const state=document.getElementById('confirm-state');
-  const action=document.getElementById('confirm-action');
-  const description=document.getElementById('confirm-description');
-  const client=window.supabaseClient;
-  if(!client){state.textContent='Não foi possível carregar o sistema de autenticação.';return;}
-  const {data:{session}}=await client.auth.getSession();
-  if(session?.user){
-    // A confirmação do email pode criar uma sessão temporária no navegador.
-    // Não deixamos essa sessão permanecer ativa: confirmar o email prova
-    // apenas a posse da caixa de correio. O acesso à conta exige a palavra-passe.
-    await client.auth.signOut();
-    state.textContent='Email confirmado com sucesso.';
-    state.dataset.type='success';
-    description.textContent='A sua conta foi confirmada. Por segurança, terminámos esta sessão. Entre novamente com o seu email e palavra-passe para aceder à sua área privada.';
-    action.hidden=false;
-    action.textContent='Entrar com email e palavra-passe';
-    return;
-  }
-  const hash=new URLSearchParams(location.hash.replace(/^#/,''));
-  const error=hash.get('error_description') || new URLSearchParams(location.search).get('error_description');
-  if(error){
-    state.textContent=decodeURIComponent(error.replace(/\+/g,' '));
-    state.dataset.type='error';
-    action.hidden=false;
-    action.textContent='Voltar ao login';
-    return;
-  }
-  state.textContent='O link de confirmação não criou uma sessão válida. Solicite um novo email de confirmação e tente novamente.';
-  state.dataset.type='error';
-  action.hidden=false;
+(function(){
+const state=document.getElementById('confirm-state'),action=document.getElementById('confirm-action'),description=document.getElementById('confirm-description');
+function show(type,msg,desc){state.className='confirm-status '+type;state.textContent=msg;description.textContent=desc;action.hidden=false;}
+function errorFromUrl(){const h=new URLSearchParams(location.hash.replace(/^#/,'')),q=new URLSearchParams(location.search);return h.get('error_description')||q.get('error_description')||h.get('error')||q.get('error');}
+async function finish(client){
+try{
+const e=errorFromUrl();
+if(e){show('error','Não foi possível confirmar a conta.',decodeURIComponent(String(e).replace(/\+/g,' ')));return;}
+const r=await client.auth.getSession();
+if(r.error){show('error','Erro ao confirmar a conta.',r.error.message);return;}
+if(r.data&&r.data.session&&r.data.session.user){
+show('success','Email confirmado com sucesso!','A sua conta foi ativada. Por segurança, esta sessão temporária será terminada. Depois entre novamente com o seu email e palavra-passe.');
+setTimeout(()=>client.auth.signOut().catch(()=>{}),300);
+return;
+}
+show('error','O link não criou uma sessão válida.','O endereço pode ter expirado ou já ter sido utilizado. Solicite um novo email de confirmação e tente novamente.');
+}catch(e){console.error(e);show('error','Não foi possível concluir a confirmação.','Atualize a página e tente novamente. Se continuar, solicite um novo email de confirmação.');}}
+window.addEventListener('load',()=>{
+const client=window.supabaseClient;
+if(!client){show('error','Sistema de autenticação indisponível.','Atualize a página e tente novamente.');return;}
+let done=false;
+const listener=client.auth.onAuthStateChange((event,session)=>{
+if(done)return;
+if(event==='SIGNED_IN'&&session){done=true;try{listener.data.subscription.unsubscribe();}catch(e){}finish(client);}
 });
+setTimeout(async()=>{if(done)return;done=true;try{listener.data.subscription.unsubscribe();}catch(e){}await finish(client);},1500);
+});
+})();
 </script>
-</body>
-</html>
+</body></html>
