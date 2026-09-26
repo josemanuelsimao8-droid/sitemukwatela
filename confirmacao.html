@@ -42,10 +42,15 @@ document.addEventListener('DOMContentLoaded', async () => {
   if(!client){state.textContent='Não foi possível carregar o sistema de autenticação.';return;}
   const {data:{session}}=await client.auth.getSession();
   if(session?.user){
-    state.textContent='Email confirmado com sucesso. A sua conta está ativa.';
+    // A confirmação do email pode criar uma sessão temporária no navegador.
+    // Não deixamos essa sessão permanecer ativa: confirmar o email prova
+    // apenas a posse da caixa de correio. O acesso à conta exige a palavra-passe.
+    await client.auth.signOut();
+    state.textContent='Email confirmado com sucesso.';
     state.dataset.type='success';
-    description.textContent='Já pode entrar e acompanhar os seus pedidos, orçamentos e pagamentos.';
+    description.textContent='A sua conta foi confirmada. Por segurança, terminámos esta sessão. Entre novamente com o seu email e palavra-passe para aceder à sua área privada.';
     action.hidden=false;
+    action.textContent='Entrar com email e palavra-passe';
     return;
   }
   const hash=new URLSearchParams(location.hash.replace(/^#/,''));
