@@ -1,0 +1,70 @@
+name: Mukwatela Security
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+  schedule:
+    - cron: "17 3 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  security-events: write
+
+jobs:
+  codeql:
+    name: CodeQL security scan
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        language: [javascript]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: ${{ matrix.language }}
+          queries: security-extended
+
+      - name: Analyze
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: "/language:${{ matrix.language }}"
+
+  secret-patterns:
+    name: Repository secret pattern scan
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout full history
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Scan for common secret patterns
+        shell: bash
+        run: |
+          set -euo pipefail
+          if git grep -nE 'service_role|SUPABASE_SERVICE_ROLE|BEGIN (RSA|OPENSSH|EC|DSA) PRIVATE KEY|AKIA[0-9A-Z]{16}|xox[baprs]-|sk_(live|test)_[A-Za-z0-9]+' -- . ':!assets/**'; then
+            echo "Potential secret detected. Review the matching lines and rotate any real credential immediately."
+            exit 1
+          fi
+          echo "No configured high-risk secret patterns found."
+
+  dependency-audit:
+    name: Dependency and lockfile audit
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Audit JavaScript dependencies when a package manifest exists
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ -f package-lock.json ]; then npm audit --audit-level=high
+          elif [ -f package.json ]; then npm install --package-lock-only --ignore-scripts && npm audit --audit-level=high
+          else echo "No npm manifest found; repository currently uses CDN-based frontend dependencies."
+          fi
