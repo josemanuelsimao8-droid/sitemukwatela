@@ -57,9 +57,8 @@
     const session=await getSession();if(!session){location.href='auth.html';return;}
     catalog=await loadCatalog();if(!catalog.length){message('O carrinho está vazio ou contém itens indisponíveis.','error');return;}
     for(const x of catalog){if(x.item_type==='material'&&x.stock_quantity!=null&&Number(x.quantity)>Number(x.stock_quantity)){message('O stock de '+x.name+' não é suficiente. Disponível: '+x.stock_quantity+' '+(x.unit_label||'unidade')+'.','error');return;}}
-    const deliveryMethod=document.getElementById('delivery-method')?.value||'pickup',zoneId=deliveryMethod==='delivery'?document.getElementById('delivery-zone')?.value||null:null;
-    const address=document.getElementById('delivery-address')?.value.trim()||null,contact=document.getElementById('delivery-contact')?.value.trim()||null;
-    if(deliveryMethod==='delivery'&&(!zoneId||!address)){message('Selecione uma zona e preencha a morada de entrega.','error');return;}
+    const deliveryMethod='pickup',zoneId=null;
+    const address=null,contact=document.getElementById('delivery-contact')?.value.trim()||null;
     const paymentMethod=hasQuote?null:document.querySelector('input[name="paymentMethod"]:checked')?.value||null;if(!hasQuote&&!paymentMethod){message('Selecione uma forma de pagamento.','error');return;}
     const notes=document.getElementById('service-observations')?.value.trim()||null;
     const items=catalog.map(x=>({service_id:x.id,quantity:Math.max(1,Math.trunc(Number(x.quantity)||1)),specifications:x.specifications||{}}));
@@ -81,7 +80,7 @@
       }
     }catch(e){
       console.error(e);
-      message('Não foi possível carregar as opções de pagamento ou entrega.','error');
+      message('Não foi possível carregar as opções de pagamento.','error');
       const submit=document.querySelector('#checkout-form button[type="submit"]');
       if(submit && !hasQuote) submit.disabled=true;
     }
