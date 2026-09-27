@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mukwatela | Recuperar acesso</title>
+  <link rel="stylesheet" href="./css/styles.css">
+</head>
+<body>
+  <header class="site-header" id="top">
+    <div class="container nav-wrap">
+      <a href="index.html" class="brand" aria-label="Voltar ao início">
+        <img class="brand-logo" src="assets/logotipo%20.png" alt="Mukwatela logo">
+      </a>
+      <div class="header-actions">
+        <a class="btn btn-secondary header-login" href="auth.html">Entrar</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="auth-page-shell">
+    <section class="auth-layout container compact-auth">
+      <div class="auth-panel auth-card register-card">
+        <span class="eyebrow">Segurança da conta</span>
+        <h1>Confirmar recuperação</h1>
+        <p id="gateway-text">O pedido de recuperação foi recebido. Clique no botão abaixo para continuar.</p>
+
+        <div id="gateway-message" class="auth-message" hidden aria-live="polite"></div>
+
+        <button id="continue-recovery" class="btn btn-primary btn-block" type="button">
+          Continuar para redefinir a palavra-passe
+        </button>
+
+        <a class="link-button" href="auth.html">Voltar ao login</a>
+      </div>
+    </section>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="./js/supabase.js?v=20260927-recovery"></script>
+  <script>
+    (() => {
+      const message = (text, type = 'info') => {
+        const el = document.getElementById('gateway-message');
+        if (!el) return;
+        el.textContent = text;
+        el.dataset.type = type;
+        el.hidden = false;
+      };
+
+      document.addEventListener('DOMContentLoaded', async () => {
+        const button = document.getElementById('continue-recovery');
+        const params = new URLSearchParams(window.location.search);
+        const tokenHash = params.get('token_hash');
+        const type = params.get('type') || 'recovery';
+
+        if (!tokenHash || type !== 'recovery') {
+          button.disabled = true;
+          message('Este link de recuperação não é válido. Solicite um novo email de recuperação.', 'error');
+          return;
+        }
+
+        button.addEventListener('click', async () => {
+          button.disabled = true;
+          button.textContent = 'A validar...';
+
+          const { data, error } = await window.supabaseClient.auth.verifyOtp({
+            token_hash: tokenHash,
+            type: 'recovery'
+          });
+
+          if (error || !data?.session) {
+            console.error(error);
+            message(
+              'Não foi possível validar este link. Ele pode ter expirado ou já ter sido utilizado. Solicite um novo email de recuperação.',
+              'error'
+            );
+            button.disabled = false;
+            button.textContent = 'Tentar novamente';
+            return;
+          }
+
+          window.history.replaceState({}, document.title, 'recuperar-password.html');
+          window.location.replace('recuperar-password.html');
+        });
+      });
+    })();
+  </script>
+</body>
+</html>
