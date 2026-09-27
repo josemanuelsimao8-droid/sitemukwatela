@@ -5,7 +5,7 @@ import { minify } from 'terser';
 
 const root = fileURLToPath(new URL('..', import.meta.url));
 const dist = join(root, 'dist');
-const excluded = new Set(['.git', 'node_modules', 'dist', '.vercel', '.DS_Store', 'package.json', 'package-lock.json']);
+const excluded = new Set(['.git', 'node_modules', 'dist', '.vercel', '.DS_Store', '.github', 'docs', 'scripts', 'supabase', 'README.md', 'package.json', 'package-lock.json']);
 
 async function copyTree(src, dest) {
   await mkdir(dest, { recursive: true });
