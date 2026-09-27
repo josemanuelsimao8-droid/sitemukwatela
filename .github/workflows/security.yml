@@ -77,3 +77,29 @@ jobs:
           elif [ -f package.json ]; then npm install --package-lock-only --ignore-scripts && npm audit --audit-level=high
           else echo "No npm manifest found; repository currently uses CDN-based frontend dependencies."
           fi
+
+  production-build:
+    name: Production build validation
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install dependencies
+        run: npm install
+      - name: Build production output
+        run: npm run build
+      - name: Verify production output
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f dist/index.html
+          if find dist -type f -name '*.map' | grep -q .; then
+            echo "Production output contains source maps."
+            exit 1
+          fi
+          echo "Production output is present and contains no source maps."
