@@ -3,6 +3,7 @@
   const money=(v,c='AOA')=>v==null?'Sob orçamento':String(c||'AOA')+' '+Number(v).toLocaleString('pt-PT',{minimumFractionDigits:2,maximumFractionDigits:2});
   const msg=(t,type='info')=>{const n=document.getElementById('admin-client-message');if(n){n.textContent=t;n.dataset.type=type;n.hidden=false;}};
   async function requireAdmin(){
+    await db().auth.refreshSession();
     const s=(await db().auth.getSession()).data?.session;if(!s){location.href='auth.html';return null;}
     const r=await db().from('profiles').select('role').eq('id',s.user.id).maybeSingle();
     if(r.data?.role!=='admin'){location.href='dashboard.html';return null;}return s;
