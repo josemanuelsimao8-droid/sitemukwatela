@@ -1,11 +1,10 @@
-import { cp, mkdir, readdir, readFile, writeFile } from 'node:fs/promises';
+import { cp, mkdir, readdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { minify } from 'terser';
 
 const root = fileURLToPath(new URL('..', import.meta.url));
 const dist = join(root, 'dist');
-
 const excluded = new Set(['.git', 'node_modules', 'dist', '.vercel', '.DS_Store', 'package.json', 'package-lock.json']);
 
 async function copyTree(src, dest) {
@@ -29,8 +28,7 @@ async function walk(dir) {
   return out;
 }
 
-await cp(join(root, 'dist'), join(root, '.vercel-build-backup'), { recursive: true, force: true }).catch(() => {});
-await cp(join(root, 'dist'), join(root, 'dist'), { recursive: true, force: true }).catch(() => {});
+await rm(dist, { recursive: true, force: true });
 await copyTree(root, dist);
 
 const jsFiles = await walk(join(dist, 'js'));
