@@ -30,6 +30,7 @@
   }
 
   async function requireAdmin(){
+    await db().auth.refreshSession();
     const authResult=await db().auth.getUser();
     const user=authResult.data?.user;
     if(authResult.error||!user){window.location.href='auth.html';return null;}
