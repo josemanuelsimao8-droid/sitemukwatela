@@ -1,1 +1,5 @@
 .DS_Store
+*.map
+dist/
+.vercel/
+node_modules/
