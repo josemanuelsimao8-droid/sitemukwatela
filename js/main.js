@@ -64,6 +64,14 @@ function initHeader() {
     link.addEventListener('click', closeMobileMenu);
   });
 
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape') closeMobileMenu();
+  });
+
+  window.addEventListener('resize', () => {
+    if (window.innerWidth > 1150) closeMobileMenu();
+  });
+
   navTrigger?.addEventListener('mouseenter', () => {
     megaMenu?.classList.add('is-visible');
     navTrigger.setAttribute('aria-expanded', 'true');
