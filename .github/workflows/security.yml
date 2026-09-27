@@ -53,6 +53,15 @@ jobs:
             exit 1
           fi
           echo "No configured high-risk secret patterns found."
+      - name: Fail if source maps are committed
+        shell: bash
+        run: |
+          set -euo pipefail
+          if find . -type f -name '*.map' -not -path './.git/*' | grep -q .; then
+            echo "Source maps must not be published in production. Remove *.map files."
+            exit 1
+          fi
+          echo "No source maps found."
 
   dependency-audit:
     name: Dependency and lockfile audit
