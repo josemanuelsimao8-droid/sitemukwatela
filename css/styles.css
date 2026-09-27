@@ -2505,3 +2505,205 @@ html,body{max-width:100%;overflow-x:hidden}
 @media (max-width:1150px){
   .site-header .nav-cart-item{display:none;}
 }
+
+
+/* =========================================================
+   MOBILE HEADER — stable, clean and touch-friendly
+   ========================================================= */
+@media (max-width: 1150px) {
+  .site-header {
+    z-index: 1000;
+  }
+
+  .site-header .nav-wrap {
+    min-height: 76px;
+    height: 76px;
+    gap: 12px;
+    padding-left: 0;
+    padding-right: 0;
+  }
+
+  .site-header.is-scrolled .nav-wrap {
+    min-height: 68px;
+    height: 68px;
+  }
+
+  .site-header .brand {
+    min-width: 0;
+    flex: 1 1 auto;
+  }
+
+  .site-header .brand-logo {
+    width: 132px;
+    height: 50px;
+    object-fit: contain;
+  }
+
+  .site-header .nav-toggle {
+    position: relative;
+    z-index: 1002;
+    width: 46px;
+    height: 46px;
+    flex: 0 0 46px;
+    padding: 0;
+    border: 1px solid rgba(13,13,13,.14);
+    border-radius: 10px;
+    background: rgba(255,255,255,.96);
+    gap: 5px;
+    transition: background .2s ease, border-color .2s ease;
+  }
+
+  .site-header .nav-toggle:hover {
+    transform: none;
+    background: #fff;
+    border-color: rgba(13,13,13,.22);
+  }
+
+  .site-header .nav-toggle span {
+    width: 19px;
+    height: 2px;
+    border-radius: 999px;
+    transform-origin: center;
+    transition: transform .22s ease, opacity .18s ease;
+  }
+
+  .site-header .nav-toggle[aria-expanded="true"] span:nth-child(1) {
+    transform: translateY(7px) rotate(45deg);
+  }
+
+  .site-header .nav-toggle[aria-expanded="true"] span:nth-child(2) {
+    opacity: 0;
+  }
+
+  .site-header .nav-toggle[aria-expanded="true"] span:nth-child(3) {
+    transform: translateY(-7px) rotate(-45deg);
+  }
+
+  .site-header .mobile-menu {
+    position: fixed;
+    inset: 0;
+    z-index: 1001;
+    padding: 76px 0 0;
+    background: rgba(13,13,13,.48);
+    backdrop-filter: blur(4px);
+  }
+
+  .site-header.is-scrolled .mobile-menu {
+    padding-top: 68px;
+  }
+
+  .site-header .mobile-menu-inner {
+    width: 100%;
+    max-width: none;
+    min-height: calc(100dvh - 76px);
+    height: calc(100dvh - 76px);
+    margin: 0;
+    padding: 10px 20px max(24px, env(safe-area-inset-bottom));
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+    background: #fff;
+    border: 0;
+    border-radius: 0;
+    box-shadow: 0 18px 44px rgba(0,0,0,.16);
+    gap: 0;
+    align-items: stretch;
+  }
+
+  .site-header.is-scrolled .mobile-menu-inner {
+    min-height: calc(100dvh - 68px);
+    height: calc(100dvh - 68px);
+  }
+
+  .site-header .mobile-menu-inner > a {
+    min-height: 54px;
+    padding: 15px 2px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid rgba(13,13,13,.09);
+    font-size: .92rem;
+    font-weight: 750;
+    letter-spacing: .025em;
+    text-transform: uppercase;
+  }
+
+  .site-header .mobile-menu-inner > a.is-current {
+    margin: 4px -10px 0;
+    padding-left: 12px;
+    padding-right: 12px;
+    border-bottom-color: rgba(231,174,36,.65);
+    background: rgba(231,174,36,.08);
+    border-radius: 8px;
+  }
+
+  .site-header .mobile-menu-inner .header-cart-count {
+    margin-left: auto;
+  }
+
+  .site-header .mobile-menu-inner .mobile-cta {
+    justify-content: center;
+    width: 100%;
+    min-height: 52px;
+    margin-top: 14px;
+    padding: 0 18px;
+    border: 1px solid rgba(13,13,13,.12);
+    border-radius: 10px;
+  }
+
+  .site-header .mobile-menu-inner .mobile-cta + .mobile-cta {
+    margin-top: 9px;
+  }
+
+  .site-header .mobile-menu-inner .mobile-cta.btn-whatsapp {
+    border-color: var(--gold);
+  }
+}
+
+@media (max-width: 520px) {
+  .site-header .nav-wrap {
+    width: min(100% - 28px, 1180px);
+  }
+
+  .site-header .brand-logo {
+    width: 118px;
+    height: 46px;
+  }
+
+  .site-header .nav-toggle {
+    width: 44px;
+    height: 44px;
+    flex-basis: 44px;
+  }
+
+  .site-header .mobile-menu-inner {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  .site-header .mobile-menu-inner > a {
+    font-size: .88rem;
+  }
+}
+
+@media (max-width: 360px) {
+  .site-header .nav-wrap {
+    width: calc(100% - 22px);
+  }
+
+  .site-header .brand-logo {
+    width: 108px;
+  }
+
+  .site-header .mobile-menu-inner {
+    padding-left: 14px;
+    padding-right: 14px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .site-header .nav-toggle span,
+  .site-header .mobile-menu {
+    transition: none;
+  }
+}
