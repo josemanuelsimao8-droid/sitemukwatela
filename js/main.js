@@ -64,6 +64,10 @@ function initHeader() {
     link.addEventListener('click', closeMobileMenu);
   });
 
+  mobileMenu?.addEventListener('click', (event) => {
+    if (event.target === mobileMenu) closeMobileMenu();
+  });
+
   document.addEventListener('keydown', (event) => {
     if (event.key === 'Escape') closeMobileMenu();
   });
