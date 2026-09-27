@@ -2,7 +2,7 @@
   const db=()=>window.supabaseClient, cart=()=>window.MukwatelaCart;
   const money=(v,c='AOA')=>v==null?'Sob orçamento':c+' '+Number(v).toLocaleString('pt-PT',{minimumFractionDigits:2,maximumFractionDigits:2});
   const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
-  let catalog=[],zones=[],methods=[],hasQuote=false;
+  let catalog=[],methods=[],hasQuote=false;
 
   function message(text,type='info'){const n=document.getElementById('shop-message');if(!n)return;n.textContent=text;n.dataset.type=type;n.hidden=false;}
   async function getSession(){const r=await db().auth.getUser();return r.data?.user?{user:r.data.user}:null;}
@@ -20,16 +20,14 @@
     updateTotals();
   }
   function updateTotals(){
-    const subtotal=document.getElementById('checkout-subtotal'),fee=document.getElementById('checkout-delivery-fee'),total=document.getElementById('checkout-total'),method=document.getElementById('delivery-method')?.value||'pickup',zone=document.getElementById('delivery-zone')?.value;
+    const subtotal=document.getElementById('checkout-subtotal'),fee=document.getElementById('checkout-delivery-fee'),total=document.getElementById('checkout-total');
     const known=!hasQuote;
     const base=known?catalog.reduce((s,x)=>s+Number(x.unit_price)*Number(x.quantity),0):null;
-    const z=zones.find(x=>x.id===zone),deliveryFee=method==='delivery'?(Number(z?.fee||0)):0;
+    const deliveryFee=0;
     if(subtotal)subtotal.textContent=base==null?'Sob orçamento':money(base,catalog[0]?.currency||'AOA');
     if(fee)fee.textContent=money(deliveryFee,catalog[0]?.currency||'AOA');
     if(total)total.textContent=base==null?'Sob orçamento':money(base+deliveryFee,catalog[0]?.currency||'AOA');
-    document.getElementById('delivery-zone')?.toggleAttribute('disabled',method!=='delivery');
-    const addr=document.getElementById('delivery-address');if(addr)addr.required=method==='delivery';
-    const note=document.getElementById('delivery-zone-note');if(note)note.textContent=method==='delivery'?(z?z.description+' · Taxa: '+money(z.fee,catalog[0]?.currency||'AOA'):'Selecione uma zona de entrega.'):'Levantamento sem taxa de entrega.';
+    
     const payStage=document.querySelector('.checkout-payment-stage');if(payStage)payStage.hidden=hasQuote;
     const submit=document.querySelector('#checkout-form button[type="submit"]');if(submit)submit.textContent=hasQuote?'ENVIAR PARA ORÇAMENTO':'CONTINUAR PARA PAGAMENTO';
   }
@@ -55,11 +53,6 @@
     return true;
   }
   function renderPaymentInstructions(){const node=document.getElementById('payment-instructions'),value=document.querySelector('input[name="paymentMethod"]:checked')?.value,m=methods.find(x=>x.code===value);if(!node||!m)return;node.innerHTML='<strong>'+esc(m.name)+'</strong>'+(m.account_details?'<p>'+esc(m.account_details)+'</p>':'')+(m.instructions?'<p>'+esc(m.instructions)+'</p>':'');}
-  async function loadZones(){
-    const r=await db().from('delivery_zones').select('id,name,description,fee').eq('is_active',true).order('sort_order',{ascending:true});if(r.error)throw r.error;zones=r.data||[];
-    const node=document.getElementById('delivery-zone');if(!node)return;
-    node.innerHTML='<option value="">Selecione a zona</option>'+zones.map(z=>'<option value="'+z.id+'">'+esc(z.name)+' · '+esc(money(z.fee,catalog[0]?.currency||'AOA'))+'</option>').join('');
-  }
   async function submit(form){
     const session=await getSession();if(!session){location.href='auth.html';return;}
     catalog=await loadCatalog();if(!catalog.length){message('O carrinho está vazio ou contém itens indisponíveis.','error');return;}
@@ -72,7 +65,7 @@
     const items=catalog.map(x=>({service_id:x.id,quantity:Math.max(1,Math.trunc(Number(x.quantity)||1)),specifications:x.specifications||{}}));
     const submitBtn=form.querySelector('button[type="submit"]');if(submitBtn){submitBtn.disabled=true;submitBtn.textContent='A criar pedido...';}
     const r=await db().rpc('create_cart_order',{p_items:items,p_notes:notes,p_payment_method:paymentMethod,p_delivery_method:deliveryMethod,p_delivery_zone_id:zoneId,p_delivery_address:address,p_delivery_contact:contact});
-    if(r.error){console.error(r.error);const d=String(r.error.message||'');message(d.includes('INSUFFICIENT_STOCK')?'O stock disponível não é suficiente para o carrinho.':d.includes('DELIVERY_ZONE')?'A zona de entrega deixou de estar disponível.':d.includes('PAYMENT_METHOD')?'A forma de pagamento selecionada não está disponível.':'Não foi possível criar o pedido. Tente novamente.','error');if(submitBtn){submitBtn.disabled=false;submitBtn.textContent=hasQuote?'ENVIAR PARA ORÇAMENTO':'CONTINUAR PARA PAGAMENTO';}return;}
+    if(r.error){console.error(r.error);const d=String(r.error.message||'');message(d.includes('INSUFFICIENT_STOCK')?'O stock disponível não é suficiente para o carrinho.':d.includes('PAYMENT_METHOD')?'A forma de pagamento selecionada não está disponível.':'Não foi possível criar o pedido. Tente novamente.','error');if(submitBtn){submitBtn.disabled=false;submitBtn.textContent=hasQuote?'ENVIAR PARA ORÇAMENTO':'CONTINUAR PARA PAGAMENTO';}return;}
     const orderId=r.data?.id||r.data?.[0]?.id;cart().clear();sessionStorage.setItem('mukwatela-last-order-id',orderId||'');location.href=hasQuote?'orcamentos.html':'pagamento.html?order='+encodeURIComponent(orderId);
   }
   document.addEventListener('DOMContentLoaded',async()=>{
@@ -83,7 +76,6 @@
     renderSummary(catalog);await loadProfile(session);
     try{
       const paymentLoaded=await loadPaymentMethods();
-      await loadZones();
       if(paymentLoaded===false && !hasQuote){
         message('Não há nenhum método de pagamento ativo. O pedido não pode avançar até que a Mukwatela disponibilize um método.','error');
       }
@@ -93,7 +85,7 @@
       const submit=document.querySelector('#checkout-form button[type="submit"]');
       if(submit && !hasQuote) submit.disabled=true;
     }
-    document.getElementById('delivery-method')?.addEventListener('change',updateTotals);document.getElementById('delivery-zone')?.addEventListener('change',updateTotals);
+    
     updateTotals();
     form.addEventListener('submit',e=>{e.preventDefault();submit(form).catch(err=>{console.error(err);message('Ocorreu um erro ao processar o pedido.','error');const b=form.querySelector('button[type="submit"]');if(b){b.disabled=false;b.textContent=hasQuote?'ENVIAR PARA ORÇAMENTO':'CONTINUAR PARA PAGAMENTO';}});});
   });
