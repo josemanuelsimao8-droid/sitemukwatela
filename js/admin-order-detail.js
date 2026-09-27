@@ -3,7 +3,7 @@
   const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
   const money=(v,c='AOA')=>v==null?'Sob orçamento':String(c||'AOA')+' '+Number(v).toLocaleString('pt-PT',{minimumFractionDigits:2,maximumFractionDigits:2});
   const statuses={pending:'Pendente',pending_payment:'A aguardar pagamento',pending_quote:'A aguardar orçamento',processing:'Em processamento',received:'Recebido',production:'Em produção',ready:'Pronto',completed:'Concluído',delivered:'Entregue',cancelled:'Cancelado'};
-  const pays={unpaid:'Não pago',submitted:'Comprovativo enviado',confirmed:'Confirmado',rejected:'Rejeitado',pending:'Pendente',paid:'Pago',failed:'Falhou',refunded:'Reembolsado'};
+  const pays={unpaid:'Não pago',submitted:'Comprovativo enviado',confirmed:'Confirmado',rejected:'Rejeitado',pending:'Pendente',paid:'Pago'};
   const deliveries={pending:'A preparar',preparing:'Em preparação',ready:'Pronto',out_for_delivery:'Em entrega',delivered:'Entregue',picked_up:'Levantado',cancelled:'Cancelado'};
   const msg=(t,type='info')=>{const n=document.getElementById('admin-order-message');if(n){n.textContent=t;n.dataset.type=type;n.hidden=false;}};
   async function requireAdmin(){
@@ -36,7 +36,16 @@
       '<section class="panel-card order-block"><h2>Gestão</h2><div class="field-two cms-field-grid"><div><label>Estado do pedido<select id="admin-order-status">'+Object.entries(statuses).map(([k,v])=>'<option value="'+k+'" '+(o.status===k?'selected':'')+'>'+esc(v)+'</option>').join('')+'</select></label></div><div><label>Estado do pagamento<select id="admin-payment-status">'+Object.entries(pays).map(([k,v])=>'<option value="'+k+'" '+(o.payment_status===k?'selected':'')+'>'+esc(v)+'</option>').join('')+'</select></label></div><div><label>Estado da entrega<select id="admin-delivery-status">'+Object.entries(deliveries).map(([k,v])=>'<option value="'+k+'" '+(o.delivery_status===k?'selected':'')+'>'+esc(v)+'</option>').join('')+'</select></label></div></div><label>Nota para o histórico<textarea id="admin-order-note" rows="4" placeholder="Ex.: produção iniciada, cliente contactado..."></textarea></label><button class="btn btn-primary" id="save-admin-order" type="button">Guardar atualização</button></section>';
     document.getElementById('save-admin-order').addEventListener('click',async()=>{
       const b=document.getElementById('save-admin-order');b.disabled=true;
-      const x=await db().rpc('admin_update_order',{p_order_id:id,p_status:document.getElementById('admin-order-status').value,p_payment_status:document.getElementById('admin-payment-status').value,p_delivery_status:document.getElementById('admin-delivery-status').value,p_admin_note:document.getElementById('admin-order-note').value.trim()||null});
+      const selectedPayment=document.getElementById('admin-payment-status').value;
+      const currentPayment=o.payment_status;
+      const paymentId=pay.data?.[0]?.id;
+      const paymentMap={unpaid:'pending',submitted:'awaiting_confirmation',confirmed:'paid',rejected:'rejected',pending:'pending',paid:'paid'};
+      if(selectedPayment!==currentPayment){
+        if(!paymentId){msg('Não existe um pagamento associado a este pedido.','error');b.disabled=false;return;}
+        const paymentResult=await db().rpc('admin_set_payment_status',{p_payment_id:paymentId,p_status:paymentMap[selectedPayment]||'pending',p_note:document.getElementById('admin-order-note').value.trim()||null});
+        if(paymentResult.error){msg('Não foi possível atualizar o pagamento. '+(paymentResult.error.message||''),'error');b.disabled=false;return;}
+      }
+      const x=await db().rpc('admin_update_order',{p_order_id:id,p_status:document.getElementById('admin-order-status').value,p_payment_status:null,p_delivery_status:document.getElementById('admin-delivery-status').value,p_admin_note:document.getElementById('admin-order-note').value.trim()||null});
       if(x.error){msg('Não foi possível atualizar o pedido. '+(x.error.message||''),'error');b.disabled=false;return;}
       msg('Pedido atualizado com sucesso.','success');await load();
     });
