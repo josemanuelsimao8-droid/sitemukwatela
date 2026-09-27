@@ -7,6 +7,7 @@
   const deliveries={pending:'A preparar',preparing:'Em preparação',ready:'Pronto',out_for_delivery:'Em entrega',delivered:'Entregue',picked_up:'Levantado',cancelled:'Cancelado'};
   const msg=(t,type='info')=>{const n=document.getElementById('admin-order-message');if(n){n.textContent=t;n.dataset.type=type;n.hidden=false;}};
   async function requireAdmin(){
+    await db().auth.refreshSession();
     const s=(await db().auth.getSession()).data?.session;
     if(!s){location.href='auth.html';return null;}
     const r=await db().from('profiles').select('role').eq('id',s.user.id).maybeSingle();
